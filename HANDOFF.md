@@ -1,6 +1,6 @@
 # Current Handoff
 
-Last updated: 2026-07-13
+Last updated: 2026-07-14
 
 ## Project and checkpoint
 
@@ -8,14 +8,17 @@ Calorify AI Mobile is the Android-first, local/manual-first port of the legacy C
 
 - Writable repository on the current owner workstation: `C:\B Drive\Apps\calorify-ai-mobile`
 - Read-only legacy reference on the current owner workstation: `C:\B Drive\Apps\Calorify AI`
-- Intended public mobile repository: https://github.com/Sensordart56/calorify-ai-mobile
+- Public mobile repository: https://github.com/Sensordart56/calorify-ai-mobile
 - Public legacy repository: https://github.com/Sensordart56/calorifyai-react-webapp
-- Branch: `master`
-- Git remote: none configured
-- Current phase: Phase 0 complete; checkpoint ready for human review
+- Branch: `main`, tracking `origin/main`
+- Origin: https://github.com/Sensordart56/calorify-ai-mobile.git
+- Phase 0 checkpoint commit: `34b29c540dfcf729d9e4d431a2263420ca3c298c`
+- Initial public push: successful on 2026-07-14
+- Working tree: clean after the repository handoff commit
+- Current phase: Phase 0 complete and published
 - Next implementation phase: Phase 1 is pending and is not authorized
 
-No repository, remote, branch, commit, staging operation, push, pull request, signing action, upload, deployment, or publication was created during Phase 0.
+The Phase 0 checkpoint and this documentation-only handoff were committed and pushed under explicit owner authorization. No pull request, release, tag, issue, signing action, artifact upload, deployment, repository-setting change, or other external action was performed.
 
 ## Completed Phase 0 work
 
@@ -37,7 +40,7 @@ The bounded Phase 0 scan found:
 
 - No `.env` file, `foods.csv`, signing key/certificate, database, model weight, APK/AAB, or other release artifact in the publishable tree.
 - No recognized private-key, GitHub-token, AWS-key, OpenAI-key, Slack-token, or assigned API-key/secret/password/token pattern.
-- No Git remote and no external GitHub mutation.
+- No unexpected Git remote or external GitHub state was found before publication; the authorized destination was empty.
 - Owner-workstation absolute paths only in planning/handoff context, where they are explicitly labeled local and non-portable.
 - MIT covers original application source; dependencies, retained provisional Expo-derived assets, future data, and future models remain subject to their own licenses.
 
@@ -98,7 +101,7 @@ Additional evidence:
 - `.gitattributes` classifies source/configuration as normalized text and binary assets as binary.
 - `npm ls --depth=0` passes.
 
-The working tree remains intentionally unstaged and uncommitted.
+The Phase 0 checkpoint was committed and pushed after the checks passed. The documentation-only handoff commit leaves the working tree clean on `main`, tracking `origin/main`.
 
 ## Notable review corrections
 
@@ -122,7 +125,7 @@ These do not block the Phase 0 checkpoint but must be resolved before the indica
 
 ## Exact next task
 
-Human-review this unstaged Phase 0 checkpoint. If accepted, explicitly authorize any desired Git staging/commit/remote work or separately authorize Phase 1. Do not infer Phase 1 authorization from Phase 0 completion.
+Review the published Phase 0 checkpoint. Begin Phase 1 only if the owner separately authorizes it; do not infer Phase 1 authorization from Phase 0 completion or publication.
 
 ## Do not do
 
@@ -130,7 +133,7 @@ Human-review this unstaged Phase 0 checkpoint. If accepted, explicitly authorize
 - Do not start Phase 1, SQLite, llama.rn, model/data/backend work, native generation, or online lookup without separate authorization.
 - Do not configure the candidate Android application ID as if it were store-approved.
 - Do not make physical-device/model/performance claims from this emulator run.
-- Do not sign, stage, commit, create/configure a remote repository, push, upload, deploy, or publish without explicit approval.
+- Do not perform further Git publication, signing, upload, deployment, or release actions without explicit approval.
 
 ## Copyable continuation prompt
 
@@ -139,7 +142,7 @@ Continue Calorify AI Mobile from C:\B Drive\Apps\calorify-ai-mobile.
 
 Read AGENTS.md, PLAN.md, HANDOFF.md, docs/ARCHITECTURE.md, docs/DECISIONS.md, and docs/PHASE_0_AUDIT.md. Before changing Expo code, read the exact relevant Expo SDK 57 documentation at https://docs.expo.dev/versions/v57.0.0/.
 
-Phase 0 is complete and its unstaged checkpoint is ready for human review. Phase 1 is not authorized. Do not add Phase 1 screens, SQLite, llama.rn, models, food data, backend/online work, native projects, signing, publishing, or legacy-repository changes.
+Phase 0 is complete and published at commit 34b29c540dfcf729d9e4d431a2263420ca3c298c. The local branch is main, tracks origin/main, and the authorized public repository is https://github.com/Sensordart56/calorify-ai-mobile. Phase 1 is not authorized. Do not add Phase 1 screens, SQLite, llama.rn, models, food data, backend/online work, native projects, signing, further publishing, or legacy-repository changes.
 
 Preserve the provisional identity: Calorify AI, calorify-ai-mobile, and calorify. Keep com.sensordart56.calorify documentation-only until store identity is explicitly approved. Treat Android 7/API 24 only as the manual-app configuration floor; physical ARM64 tests in Phase 6 decide model/device tiers.
 

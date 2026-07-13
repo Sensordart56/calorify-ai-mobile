@@ -1,56 +1,82 @@
-# Welcome to your Expo app 👋
+# Calorify AI Mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Android-first, local-first mobile port of Calorify AI, built with Expo SDK 57, React Native 0.86, Expo Router, and strict TypeScript.
 
-## Get started
+The repository is currently at the Phase 0 gate. The stable navigation and quality-check foundation is implemented; nutrition, SQLite, local inference, model downloads, and online lookup are intentionally not implemented yet.
 
-1. Install dependencies
+## Current product contract
 
-   ```bash
-   npm install
-   ```
+- Manual nutrition logging remains useful without a network, account, backend, or model.
+- A future local model may extract only food names, quantities, and units.
+- Nutrition comes from local database records, explicit manual entry, or a sourced online result accepted by the user.
+- Meal persistence will be transactional and preserve historical snapshots.
 
-2. Start the app
+## Quality checks
 
-   ```bash
-   npx expo start
-   ```
+Install the locked dependencies, then run:
 
-In the output, you'll find options to open the app in a
+    npm ci
+    npm run check
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+npm run check runs strict TypeScript, zero-warning Expo ESLint, and deterministic Jest tests.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Additional bounded inspection:
 
-## Get a fresh project
+    npx expo config --type public
+    EXPO_OFFLINE=1 npx expo install --check
 
-When you're ready, run:
+PowerShell equivalent:
 
-```bash
-npm run reset-project
-```
+    $env:EXPO_OFFLINE='1'; npx expo install --check
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Starting Android or Expo/Metro is a runtime action and is not required for static verification:
 
-### Other setup steps
+    npm run android
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+Do not use that command unless the current phase explicitly calls for emulator verification.
 
-## Learn more
+## Current shell
 
-To learn more about developing your project with Expo, look at the following resources:
+- Stable Expo Router JavaScript tabs: Today and Settings.
+- Feature screens live under src/features.
+- Framework-independent contracts live under src/core.
+- Shared presentation primitives live under src/shared.
+- Route files only compose feature screens.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Identity currently used for development:
 
-## Join the community
+- Approved provisional display name: Calorify AI.
+- Expo slug: calorify-ai-mobile.
+- Approved provisional URL scheme: calorify.
+- Recommended future Android application ID: com.sensordart56.calorify.
 
-Join our community of developers creating universal apps.
+The Android application ID is documentation-only and is not configured or authorized for Play publication. The manual-app configuration floor is Android 7/API 24, matching Expo SDK 57; local-model RAM/storage/device tiers remain gated on Phase 6 physical-phone benchmarks.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Public repository and licensing
+
+The intended repository is https://github.com/Sensordart56/calorify-ai-mobile, owned by the Sensordart56 GitHub account. This local checkout has no remote configured; repository creation, remote setup, commit, push, signing, deployment, and publishing are separate owner-authorized actions.
+
+The root MIT LICENSE intentionally covers the original Calorify AI Mobile application source in this repository and preserves the Expo template notice. It does not automatically relicense:
+
+- npm/Expo/React Native dependencies;
+- fonts, icons, images, or other third-party assets;
+- nutrition datasets or imported provider records;
+- model weights, tokenizers, prompts distributed with third-party terms;
+- generated build artifacts.
+
+Those materials retain their own licenses, notices, attribution, and redistribution requirements. No nutrition dataset or model weight is currently included.
+
+## Project documents
+
+- AGENTS.md — durable implementation rules.
+- PLAN.md — gated delivery phases.
+- HANDOFF.md — current evidence, blockers, and continuation prompt.
+- docs/ARCHITECTURE.md — target mobile architecture.
+- docs/DATABASE.md — planned local schema and migration contract.
+- docs/MODEL_RUNTIME.md — optional local inference feasibility plan.
+- docs/ONLINE_FALLBACK.md — future controlled online lookup.
+- docs/PLAY_STORE.md — release-readiness checklist.
+- docs/DECISIONS.md — architecture decision log.
+- docs/LEGACY_ARCHITECTURE.md — inspected legacy behavior and defects.
+
+On the owner workstation, the legacy project is at C:\B Drive\Apps\Calorify AI and is read-only reference material. That absolute path is local development context, not a portable repository requirement.

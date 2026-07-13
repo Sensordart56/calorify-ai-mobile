@@ -31,6 +31,9 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
+.env.*
+!.env.example
 .env*.local
 
 # typescript
@@ -41,3 +44,15 @@ example
 # generated native folders
 /ios
 /android
+
+# local databases, models, credentials, and release artifacts
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.gguf
+*.safetensors
+*.keystore
+*.der
+*.apk
+*.aab

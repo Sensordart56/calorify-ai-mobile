@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "calorify-ai-mobile",
+    "name": "Calorify AI",
     "slug": "calorify-ai-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "calorifyaimobile",
+    "scheme": "calorify",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"

@@ -3,24 +3,26 @@
  * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
  */
 
-import '@/global.css';
-
 import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    text: '#14211A',
+    background: '#F8FBF8',
+    backgroundElement: '#FFFFFF',
+    backgroundSelected: '#E4F4E9',
+    textSecondary: '#526159',
+    accent: '#1F7A4D',
+    border: '#DCE6DF',
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    text: '#F1F7F3',
+    background: '#0D1511',
+    backgroundElement: '#17221C',
+    backgroundSelected: '#214C35',
+    textSecondary: '#AAB9B0',
+    accent: '#75D89E',
+    border: '#2A3A31',
   },
 } as const;
 
@@ -44,10 +46,10 @@ export const Fonts = Platform.select({
     mono: 'monospace',
   },
   web: {
-    sans: 'var(--font-display)',
-    serif: 'var(--font-serif)',
-    rounded: 'var(--font-rounded)',
-    mono: 'var(--font-mono)',
+    sans: 'system-ui, sans-serif',
+    serif: 'Georgia, serif',
+    rounded: 'system-ui, sans-serif',
+    mono: 'ui-monospace, monospace',
   },
 });
 

@@ -1,6 +1,6 @@
 # Local Database Design
 
-Status: proposed; implement in PLAN.md Phase 2 after review
+Status: Phase 2 complete on 2026-07-15; final API 36 route-boundary, disposable verification, recovery, fresh-bootstrap, and relaunch evidence is recorded in HANDOFF.md
 
 Engine: expo-sqlite / SQLite in app-private storage
 
@@ -18,6 +18,7 @@ Authority: local database for nutrition, history, goals, settings, accepted onli
 - Authoritative nutrition revisions are immutable. Editing creates a new revision.
 - Search indexes and future embeddings are derived and rebuildable.
 - Store energy and nutrient values at sufficient precision; round for display only and define any persisted normalization explicitly.
+- Phase 2 numeric storage uses fixed-point scale 1,000,000 with checked, centralized conversion; no value or intermediate calculation may exceed JavaScript's safe-integer range.
 - Timestamps are UTC instants plus the local calendar context needed for historical day grouping.
 
 ## Database files
@@ -36,7 +37,7 @@ If seed size or release cadence later justifies attached read-only catalogs, rec
 
 ## Logical schema
 
-Names and exact SQL types are finalized in Phase 2. SQLite identifiers below describe required semantics.
+Names and exact SQL types are finalized in the approved Phase 2 implementation. Migration 001 creates only `schema_migrations`, `food_sources`, `foods`, `food_revisions`, `food_aliases`, and `food_portions`. Meals, goals, settings, seed releases, FTS, model metadata, downloads, and online cache remain in their owning later phases.
 
 ### schema_migrations
 
@@ -49,6 +50,18 @@ Names and exact SQL types are finalized in Phase 2. SQLite identifiers below des
 | app_version | App version applying it |
 
 PRAGMA user_version mirrors the latest completed version for tooling, while schema_migrations supplies auditability. A checksum mismatch is a developer/release error, not a reason to rewrite history.
+
+## Phase 2 migration 001 contract
+
+Migration `001-foundation` is itself the first checksummed migration; there is no separately-created or unchecksummed bootstrap schema. It creates `schema_migrations` first inside its exclusive transaction, then creates the remaining Phase 2 tables, validates them, inserts its own ledger record, and sets `PRAGMA user_version = 1` before commit.
+
+All Phase 2 IDs are non-empty opaque `TEXT` primary keys. UTC instants are canonical UTC RFC 3339 `TEXT` values ending in `Z`, with either no fractional seconds or exactly three fractional digits; local calendar dates are canonical `YYYY-MM-DD` `TEXT` values. The boundary parser first checks this approved shape, then parses and round-trips it through UTC ISO serialization so impossible dates, leap days, clock components, and normalized instants are rejected before binding. SQL `CHECK` constraints reject empty identifiers and malformed basic shapes. Booleans are `INTEGER NOT NULL CHECK (value IN (0, 1))`; enumerations are constrained `TEXT` values.
+
+The authoritative revision columns are `basis_quantity_scaled`, `calories_kcal_scaled`, `protein_g_scaled`, `carbohydrates_g_scaled`, `fat_g_scaled`, and nullable `fibre_g_scaled`, `sugar_g_scaled`, and `sodium_mg_scaled`. They are `INTEGER`; required nutrients use `CHECK (typeof(column) = 'integer' AND column BETWEEN 0 AND 9007199254740991)`, positive quantities use the same check with lower bound `1`, and optional nutrients are either `NULL` or satisfy that non-negative check. This keeps every value that crosses the Expo JavaScript boundary within `Number.MAX_SAFE_INTEGER`, even though SQLite itself can store larger signed integers.
+
+`food_revisions` must declare both `UNIQUE(food_id, revision_number)` and the table-level constraint `UNIQUE(food_id, id)`. The latter is required because SQLite requires the referenced parent columns of a composite foreign key to be a declared primary key or unique key with matching collation; a unique `id` primary key alone is not a compatible parent key for the ordered pair `(food_id, id)`.
+
+`foods` uses the deferrable composite foreign key `FOREIGN KEY (id, current_revision_id) REFERENCES food_revisions(food_id, id) DEFERRABLE INITIALLY DEFERRED`. `food_revisions.food_id` similarly references `foods(id)` as deferrable and initially deferred. This permits creation of a food and its first revision in one transaction while requiring the selected current revision to belong to that same food at commit. `food_revisions` also has `BEFORE UPDATE` and `BEFORE DELETE` abort triggers, preserving immutable authoritative revisions. A non-null `current_revision_id` is therefore not bypassable after a successful commit.
 
 ### seed_releases
 
@@ -99,13 +112,13 @@ Food identity can remain stable while nutrition revisions change. Seed foods are
 | food_id | Owning food |
 | revision_number | Monotonic within food |
 | source_id | Provenance record; required except explicitly local manual data |
-| basis_quantity | Positive decimal basis |
+| basis_quantity_scaled | Positive fixed-point basis quantity at scale 1,000,000 |
 | basis_unit | Canonical gram, millilitre, or each/serving basis |
-| calories_kcal | Non-negative energy |
-| protein_g | Non-negative protein |
-| carbohydrates_g | Non-negative carbohydrate |
-| fat_g | Non-negative fat |
-| fibre_g / sugar_g / sodium_mg | Nullable future/display nutrients with explicit missing semantics |
+| calories_kcal_scaled | Non-negative fixed-point energy |
+| protein_g_scaled | Non-negative fixed-point protein |
+| carbohydrates_g_scaled | Non-negative fixed-point carbohydrate |
+| fat_g_scaled | Non-negative fixed-point fat |
+| fibre_g_scaled / sugar_g_scaled / sodium_mg_scaled | Nullable fixed-point nutrients with explicit missing semantics |
 | user_modified | Whether the user changed sourced values |
 | created_at | UTC creation time |
 
@@ -263,7 +276,7 @@ This transient cache is not authoritative. User-accepted results create food_sou
 
 | Child field | Parent | Delete/update behavior |
 |---|---|---|
-| foods.current_revision_id | food_revisions.id | Restrict; repository verifies revision belongs to the food |
+| foods.(id, current_revision_id) | food_revisions.(food_id, id) | Deferrable composite FK; the revision must belong to the same food |
 | food_revisions.food_id | foods.id | Restrict; archive foods instead of deleting referenced identity |
 | food_revisions.source_id | food_sources.id | Restrict |
 | food_aliases.food_id | foods.id | Cascade when an unreferenced food is truly deleted |
@@ -274,9 +287,9 @@ This transient cache is not authoritative. User-accepted results create food_sou
 | meal_items.food_revision_id | food_revisions.id | Set null or restrict/archive; snapshots remain authoritative |
 | installed/download metadata | Manifest identity, not a mutable FK | Validate through the model catalog service |
 
-SQLite cannot directly express “current_revision_id belongs to this food” with an ordinary foreign key. Enforce it through one repository operation plus a trigger or composite-key design selected and tested in Phase 2.
+The current-revision ownership rule is enforced by the composite foreign key above, backed by `UNIQUE(food_id, id)` in `food_revisions`; it is not repository-only validation. Integration tests must create a food/revision pair successfully, reject a cross-food current revision at transaction commit, and prove that a correctly declared composite parent key avoids SQLite's `foreign key mismatch` error.
 
-After every open/migration, foreign_keys must read as enabled. Migration and CI tests run foreign_key_check and fail on any row.
+After every open/migration, foreign_keys must read as enabled. Runtime and integration tests inspect the returned rows of `PRAGMA foreign_key_check` and fail unless there are zero rows.
 
 ## Index plan
 
@@ -287,6 +300,7 @@ Create only indexes justified by actual reads and verify query plans:
 | foods(normalized_name) with active/origin policy | Exact canonical lookup |
 | food_aliases(normalized_alias, food_id) | Exact alias candidates |
 | food_revisions(food_id, revision_number) unique | Revision history/current ownership |
+| food_revisions(food_id, id) unique | Composite current-revision foreign-key parent key |
 | food_sources(provider, provider_record_id, dataset_version) | Provenance deduplication |
 | food_portions(food_id, normalized_label) | Unit/portion resolution |
 | meals(local_date, occurred_at_utc desc) | Dashboard and daily history |
@@ -302,18 +316,17 @@ Avoid offset pagination for large history; use occurred_at_utc plus stable ID ke
 
 ## Migration protocol
 
-1. Open the database without rendering data-dependent routes.
-2. Apply connection PRAGMAs, including foreign_keys ON.
-3. Read PRAGMA user_version and schema_migrations.
-4. Verify every already-applied migration checksum known to this app version.
-5. Start one exclusive migration transaction.
-6. Apply each missing migration in order with its transaction handle.
-7. Run migration-specific invariants and foreign_key_check.
-8. Insert migration audit row and update user_version only after that step succeeds.
-9. Commit once; then run a bounded quick_check/integrity policy appropriate to database size.
-10. Expose repositories and render navigation.
+Migration definitions are ordered JSON manifests named `001-foundation.json`, `002-...json`, and so on. Each has a numeric version, immutable name, ordered SQL statement array, and checked-in SHA-256 checksum. The canonical checksum payload is the fixed-key JSON representation of version, name, and statements only; statement line endings normalize to LF before UTF-8 hashing. A Node built-in `crypto` verifier checks source manifests, and `npm run check` runs that verifier before TypeScript, lint, and Jest. Runtime compares each recorded checksum with the manifest checksum; it need not hash migration source on-device and does not need `expo-crypto`.
 
-For expo-sqlite, use withExclusiveTransactionAsync and execute every statement through the provided transaction object. Plain asynchronous transactions can be affected by queries outside the transaction and are not suitable for this critical section.
+1. Open the database without rendering data-dependent routes, set and verify the connection PRAGMAs outside a transaction, then read `PRAGMA user_version` and determine whether `schema_migrations` exists.
+2. If the ledger is absent and `user_version` is `0`, treat the database as a valid empty first install. If the ledger is absent and `user_version` is greater than `0`, or the ledger exists with an impossible/gapped history, stop with a recoverable initialization error; never infer or rebuild history.
+3. On a valid first install, open a dedicated Expo SQLite `useNewConnection` connection, enable and verify foreign keys and the bounded busy timeout before beginning `BEGIN EXCLUSIVE`. Migration 001 creates `schema_migrations` as its first statement, creates all its other schema objects, inserts its own version/name/checksum/audit record, then sets `PRAGMA user_version = 1`; all statements use that same exclusive connection and commit once.
+4. On an existing valid database, verify every recorded migration against the local immutable manifest before entering one identically configured exclusive transaction for missing versions. Apply missing migrations in order, insert each audit record, and advance `user_version` in the same transaction.
+5. Commit only if every statement, checksum, invariant, and deferred foreign key succeeds. A thrown error rolls back schema changes, ledger writes, and `user_version` together.
+6. After commit, explicitly inspect the returned rows from `PRAGMA foreign_key_check`; any row is a recoverable initialization failure. Explicitly inspect the first returned value from `PRAGMA quick_check(1)` and require exactly `ok`; any other result is a recoverable integrity failure.
+7. Only then expose repositories and render data-dependent navigation.
+
+Expo SDK 57's `withExclusiveTransactionAsync` opens a new connection and starts `BEGIN` before its callback. SQLite cannot enable `foreign_keys` after a transaction has begun, so the Phase 2 adapter instead uses Expo's public `openDatabaseAsync(name, { useNewConnection: true })` option, enables and verifies foreign keys before `BEGIN EXCLUSIVE`, and closes that dedicated connection after commit or rollback. This preserves isolation while ensuring foreign-key enforcement on the exclusive connection; plain asynchronous transactions remain unsuitable for this critical section.
 
 Migration rules:
 
@@ -324,6 +337,7 @@ Migration rules:
 - Backfills are idempotent or guarded by the schema version.
 - Large backfills use a separately designed resumable plan rather than leaving a transaction unbounded.
 - A failed migration leaves the previous version intact and produces a recoverable error.
+- A first-install bootstrap is never outside the migration ledger or checksum protocol.
 
 ## Transactional meal-save protocol
 
@@ -345,16 +359,17 @@ Do not perform model inference, HTTP, file download, embedding creation, or user
 
 ## Date, decimal, and rounding policy
 
-Decisions to finalize before Phase 3:
+Phase 2 fixes the storage scale at `SCALE = 1_000_000`. A single framework-independent numeric module owns `scale`, `unscale`, checked addition, checked multiplication/division, and comparison. It accepts only finite decimal input with at most six fractional digits after normalization; it never uses a binary floating-point result as authoritative storage.
 
-- Use a decimal/fixed-scale representation for calculations; do not rely on repeated binary floating-point rounding.
-- Store more precision than the UI displays.
-- Sum unrounded item results, then round the meal display.
-- Define calorie/macro display decimals consistently.
+- `scale` parses canonical decimal text into a safe integer and rejects values, products, or rounding requirements outside `0..Number.MAX_SAFE_INTEGER` instead of rounding silently.
+- `unscale` returns canonical decimal text from a safe integer; presentation may format that text but cannot change stored value.
+- Every persisted scaled value and every JavaScript intermediate must satisfy `Number.isSafeInteger`. Before multiplication, the module checks the operand bound; before addition, it checks the remaining headroom. SQL uses the matching `9007199254740991` upper bound in every scaled-value `CHECK` constraint.
+- Source or user values with more than six fractional digits are rejected in Phase 2/3 until an explicitly approved rounding policy handles them. No source ingestion or meal calculation may silently truncate, use `Math.round` on an unsafe value, or rely on a SQLite value outside JavaScript-safe range.
+- Phase 3 owns user-facing calorie/macro display precision and any explicitly approved input rounding mode. It must sum exact scaled item values, test lower/upper boundaries and overflow, then derive display-only values.
 - Capture local_date at the user-confirmed meal timezone so later travel does not move historical meals to another day.
 - Query “today” using the current local calendar interval converted to UTC, while historical rows retain their saved local_date.
 
-Golden tests cover daylight-saving transitions even though the initial target timezone may not use them.
+Tests cover exact scale/unscale round trips, maximum safe stored values, rejected fractional precision, multiplication/addition overflow, SQL CHECK rejection above the safe bound, and daylight-saving date boundaries even though the initial target timezone may not use them.
 
 ## Seed build and upgrade
 
@@ -373,11 +388,24 @@ The current legacy CSV fails the provenance gate and is input evidence only, not
 
 ## Backup, export, and recovery
 
-- Exclude database, model files, partial downloads, and online cache from automatic Android backup by default until a privacy/security decision approves a format.
+- The approved privacy-first Phase 2 baseline is `android.allowBackup: false`. It disables Android backup and restore for all application data, not just the database. Until explicit export/import exists, uninstall, device loss, or device replacement can therefore cause unrecoverable local-data loss.
+- This app-config change is verifiable as resolved configuration only in Phase 2. Proof that a generated native Android manifest and backup/restore behavior honor it is deferred to the later native/release phase; Expo Go uses its host application's manifest.
 - Design a user-triggered export with schema version, manifest, hashes, and clear inclusion choices.
 - If exports contain meal history, consider encryption and require an explicit destination chosen by the user.
 - Imports validate size, format, schema range, checksums, IDs, and constraints in staging before merging.
 - Corruption handling never auto-deletes. Offer retry, diagnostics, and export/recovery options where technically possible.
+
+## Android SQLite integration harness
+
+The Phase 2 Android-only development route is `/database-verification`, composed by `src/app/database-verification.tsx`; its recovery behavior is feature-owned in `src/features/shell/database/recovery-verification.tsx`. It is not linked from tabs or product settings. After the approved `npx expo start --android` API 36 test session is running, the tester opens the Metro URL shown by Expo with the Expo Router suffix `/--/database-verification` (for example, the displayed `exp://<metro-host>:<port>/--/database-verification` URL) through Expo Go's development URL entry. The route shows an explicit warning that it uses a disposable database only. Tests, Jest setup, testing-library imports, and Node builtin imports are prohibited under `src/app` and checked by `npm run verify:routes` before all other `npm run check` gates.
+
+The route constructs the fixed database name `calorify-phase2-integration-test.db`, never imports the production database name or directory from the application database adapter, and creates no repository bound to the production database. Before each individual case it calls the test-only reset function for that exact literal name, opens a new connection, applies the normal connection invariants, runs the case, closes the connection, then resets that same literal test database in `finally`. The reset helper rejects every other name, including the production database name.
+
+The screen has one `Run all cases` control. It disables itself while the fixed in-app list runs serially; every case performs its own reset/open/run/close/finally-reset lifecycle before the next begins: fresh bootstrap; idempotent reopen; composite ownership; cross-food ownership rejection; immutable revision; checksum mismatch; injected migration rollback; inconsistent user-version/ledger; numeric SQL constraint boundary; unique-constraint rejection; returned `foreign_key_check` and `quick_check(1)` validation; and exclusive concurrent writes. Each displays only a case ID, pass/fail state, and sanitized error category. It does not display SQL rows, database paths, meal data, or arbitrary exception text; a failed reset is itself a failed case.
+
+The same guarded route also has a development-only `Verify recovery and Retry` control. It intentionally fails one initialization attempt, shows the normal non-destructive Retry UI, then initializes only `calorify-phase2-recovery-verification.db` after Retry. On its explicit Return action, it releases the gate-owned recovery connection exactly once before resetting that declared disposable database; a cleanup failure remains visible and does not silently navigate away. On Android Back or any uncontrolled route unmount it does not attempt a concurrent reset, instead retaining the harmless disposable file until the next safe pre-entry reset. It never opens, resets, or deletes `calorify.db`. This control is absent from production because the route itself renders not-found before any database is opened.
+
+The route is guarded by `__DEV__`. If a production build reaches the path, it renders the existing safe not-found/error presentation, opens no database, and exposes no reset control.
 
 ## Required test matrix
 
@@ -385,8 +413,12 @@ The current legacy CSV fails the provenance gate and is input evidence only, not
 - Upgrade from every supported schema fixture.
 - Re-running already-applied migrations.
 - Tampered migration checksum.
+- Migration 001 bootstrap, including creation and population of its own ledger in one transaction.
+- `user_version > 0` with no migration ledger, gapped ledger, and history/user-version disagreement.
 - Failure injection at every create/copy/swap step.
-- Foreign-key and uniqueness violations.
+- Foreign-key and uniqueness violations, including a successful composite current-revision relation without `foreign key mismatch` and rejected cross-food ownership.
+- Inspection of returned `foreign_key_check` rows and `quick_check(1)` result, not merely execution of those PRAGMAs.
+- Fixed-point scale/unscale, safe-bound, rounding-rejection, SQL constraint, and arithmetic-overflow tests.
 - Meal failure on each item insert proving total rollback.
 - Concurrent repository writes during exclusive work.
 - FTS rebuild equivalence.

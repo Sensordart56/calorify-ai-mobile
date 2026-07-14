@@ -2,16 +2,16 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const routeFiles = [
-  '(tabs)/index.tsx',
-  '(tabs)/log.tsx',
-  '(tabs)/history.tsx',
-  '(tabs)/settings.tsx',
-  'review.tsx',
-  'manual-entry.tsx',
-  'goals.tsx',
-  'food-library.tsx',
-  'models.tsx',
-  'about-data-sources.tsx',
+  '(app)/(tabs)/index.tsx',
+  '(app)/(tabs)/log.tsx',
+  '(app)/(tabs)/history.tsx',
+  '(app)/(tabs)/settings.tsx',
+  '(app)/review.tsx',
+  '(app)/manual-entry.tsx',
+  '(app)/goals.tsx',
+  '(app)/food-library.tsx',
+  '(app)/models.tsx',
+  '(app)/about-data-sources.tsx',
 ] as const;
 
 describe('route composition', () => {

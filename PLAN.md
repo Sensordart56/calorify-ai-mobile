@@ -1,6 +1,6 @@
 # Calorify Mobile Delivery Plan
 
-Last updated: 2026-07-13
+Last updated: 2026-07-14
 
 This plan deliberately separates product slices from high-risk native, data, and distribution work. A phase starts only after the prior gate is satisfied. If a gate fails, keep the last working phase intact and record the rollback or revised decision in docs/DECISIONS.md and HANDOFF.md.
 
@@ -23,9 +23,22 @@ Update HANDOFF.md after every meaningful implementation milestone and before int
 | Work | Status |
 |---|---|
 | Architecture/planning inspection and ten documents | Completed |
-| Phase 0 — Baseline, review cleanup, and provisional identity | Complete; checkpoint ready for human review; Phase 1 not authorized |
-| Phases 1–14 | Pending |
-| Emulator/device/runtime verification | Phase 0 shell verified on Pixel_8 AVD, Android 16/API 36; no physical-device or model claims |
+| Phase 0 — Baseline, review cleanup, and provisional identity | Complete |
+| Phase 1 — Mobile shell and offline navigation | Complete on 2026-07-14; static checks and required representative API 36 runtime gate passed |
+| Phases 2–14 | Pending |
+| Emulator/device/runtime verification | Phase 0 shell verified; Phase 1 representative API 36 verification complete; no physical-device or model claims |
+
+## Macro roadmap
+
+| Stage | Detailed phases |
+|---|---|
+| Foundation | Phase 0 |
+| Mobile shell | Phase 1 |
+| Offline product | Phases 2-5 |
+| Local AI | Phases 6-8 |
+| Android hardening | Phase 9 |
+| Online fallback | Phases 10-11 |
+| Store release | Phases 12-14 |
 
 ## Locked decisions
 
@@ -126,13 +139,15 @@ Gate:
 - Satisfied: deterministic checks and bounded Android export pass.
 - Satisfied: the authorized API 36 shell runtime review and public-repository scan are recorded.
 - Satisfied: PLAN.md, docs/DECISIONS.md, and HANDOFF.md agree on the Phase 0 checkpoint and remaining store/model decisions.
-- Phase 1 remains pending and requires separate authorization even after this gate closes.
+- At the Phase 0 checkpoint, Phase 1 remained pending and required separate authorization.
 
 Rollback:
 
 - Revert only Phase 0-owned scaffold changes; the repository returns to the verified SDK 57 starter.
 
 ## Phase 1 — Mobile shell and offline navigation
+
+Status: complete on 2026-07-14. Static checks passed, and the required representative Pixel 8 Android 16/API 36 runtime gate passed: light-mode navigation and ordinary Back; dark mode and 1.3x font scale on Today, Manual Entry, Settings, and Food Library; text and decimal keyboard behavior; fixture search states; portrait enforcement; and final clean relaunch. Comprehensive screen-by-screen dark-mode/keyboard testing, TalkBack, API 35/API 37, physical-device, and Predictive Back validation remain deferred to Phase 9 or their designated later gates.
 
 Deliverables:
 
@@ -144,12 +159,13 @@ Tests:
 
 - Route and reducer unit tests.
 - Accessibility-label smoke tests.
-- Android API 36 emulator navigation, rotation policy, predictive-back, keyboard, and process-restart checks.
+- Android API 36 emulator navigation, configured portrait-orientation policy, ordinary Android Back, keyboard, and process-restart checks. Predictive Back is deferred to Phase 9.
 
 Gate:
 
 - Every primary screen is reachable and usable without network access.
 - No business logic lives in route components.
+- Satisfied: the required representative API 36 runtime evidence is recorded in HANDOFF.md; light mode and font scale 1.0, plus normal rotation settings, were restored before shutdown.
 
 Rollback:
 

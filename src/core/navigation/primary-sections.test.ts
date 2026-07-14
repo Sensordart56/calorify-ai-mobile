@@ -8,6 +8,8 @@ describe('primarySections', () => {
     expect(primarySections).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ route: 'index', accessibilityLabel: expect.any(String) }),
+        expect.objectContaining({ route: 'log', accessibilityLabel: expect.any(String) }),
+        expect.objectContaining({ route: 'history', accessibilityLabel: expect.any(String) }),
         expect.objectContaining({ route: 'settings', accessibilityLabel: expect.any(String) }),
       ]),
     );

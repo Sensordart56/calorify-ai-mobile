@@ -5,7 +5,7 @@ import { useTheme } from '@/hooks/use-theme';
 
 export default function PrimaryTabsLayout() {
   const theme = useTheme();
-  const [today, settings] = primarySections;
+  const [today, log, history, settings] = primarySections;
 
   return (
     <Tabs
@@ -31,6 +31,14 @@ export default function PrimaryTabsLayout() {
           title: today.title,
           tabBarAccessibilityLabel: today.accessibilityLabel,
         }}
+      />
+      <Tabs.Screen
+        name={log.route}
+        options={{ title: log.title, tabBarAccessibilityLabel: log.accessibilityLabel }}
+      />
+      <Tabs.Screen
+        name={history.route}
+        options={{ title: history.title, tabBarAccessibilityLabel: history.accessibilityLabel }}
       />
       <Tabs.Screen
         name={settings.route}

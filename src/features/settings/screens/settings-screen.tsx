@@ -1,30 +1,33 @@
-import { StyleSheet, View } from 'react-native';
+import { useRouter } from 'expo-router';
 
-import { Spacing } from '@/constants/theme';
-import { FoundationCard } from '@/shared/ui/foundation-card';
+import { productCopy } from '@/shared/copy/product-copy';
+import { appPaths } from '@/core/navigation/secondary-screens';
+import { Card } from '@/shared/ui/card';
+import { ListRow } from '@/shared/ui/list-row';
 import { Screen } from '@/shared/ui/screen';
+import { StatusBadge } from '@/shared/ui/status-badge';
+import { ThemedText } from '@/components/themed-text';
 
 export function SettingsScreen() {
+  const router = useRouter();
   return (
-    <Screen
-      title="Settings"
-      description="Only foundation decisions are shown in this phase.">
-      <View style={styles.cards}>
-        <FoundationCard
-          title="Product identity pending"
-          body="Calorify AI and the calorify URL scheme are approved for development. The permanent store name, Android application ID, brand assets, and release owner still require approval."
-        />
-        <FoundationCard
-          title="Local AI remains optional"
-          body="No model runtime or model file is installed. Manual logging will stay available on every supported device."
-        />
-      </View>
+    <Screen title="Settings" description="Presentation preferences and product information.">
+      <StatusBadge label="No settings are saved" />
+      <Card>
+        <ListRow title="Goals" detail="Fixture targets" onPress={() => router.push(appPaths.goals)} />
+        <ListRow title="Food Library" detail="Fixture foods and source placeholders" onPress={() => router.push(appPaths.foodLibrary)} />
+        <ListRow title="Models" detail="Manual mode stays available" onPress={() => router.push(appPaths.models)} />
+        <ListRow title="About and Data Sources" detail="Product limitations and future sources" onPress={() => router.push(appPaths.aboutDataSources)} />
+      </Card>
+      <Card>
+        <ThemedText type="smallBold">Privacy and network mode</ThemedText>
+        <ThemedText themeColor="textSecondary">Placeholder only. This shell makes no network requests.</ThemedText>
+        <ThemedText type="smallBold">Data and export</ThemedText>
+        <ThemedText themeColor="textSecondary">Placeholder only. No data is stored or exported.</ThemedText>
+        <ThemedText type="smallBold">Appearance</ThemedText>
+        <ThemedText themeColor="textSecondary">Follows the system light or dark appearance.</ThemedText>
+      </Card>
+      <ThemedText type="small" themeColor="textSecondary">{productCopy.manualFirst}</ThemedText>
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  cards: {
-    gap: Spacing.three,
-  },
-});

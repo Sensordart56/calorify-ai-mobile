@@ -336,6 +336,22 @@ Implementation evidence: The Phase 0 public-tree scan found no environment files
 
 Revisit when: The legal owner/entity changes, a contributor policy is adopted, or CI scope is deliberately expanded with separate authority.
 
+## D-021 — Phase 1 Back and orientation verification policy
+
+Date: 2026-07-14
+
+Status: Accepted
+
+Context: `predictiveBackGestureEnabled` is intentionally `false` in the current app configuration. Expo Go cannot validate a native predictive-back contract, while Phase 1 still needs meaningful navigation verification.
+
+Decision: Keep `predictiveBackGestureEnabled: false`. Phase 1 verifies ordinary Android Back behavior and the configured portrait orientation policy. Enabling and validating predictive Back is deferred to Phase 9, using a suitable native/development build.
+
+Alternatives: Enable predictive Back now; claim Expo Go ordinary Back evidence as predictive-Back evidence; remove the configuration without a recorded policy.
+
+Consequences: Phase 1 makes no predictive-Back claim. The current back stack remains testable without changing native configuration, and Phase 9 owns any later enablement and native evidence.
+
+Revisit when: Phase 9 Android hardening has an approved development-build lane and evidence for the selected native behavior.
+
 ## Unresolved decision register
 
 | Owner decision | Needed by |

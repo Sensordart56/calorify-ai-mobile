@@ -98,7 +98,7 @@ Revisit when: No current condition; any expansion needs a new safety/correctness
 
 Date: 2026-07-13
 
-Status: Proposed for Phase 2
+Status: Accepted on 2026-07-14 after the Phase 2 API 36 runtime gate
 
 Context: PostgreSQL, Prisma, pgvector, Express, and Docker cannot be required for an offline phone app.
 
@@ -106,7 +106,7 @@ Decision: Use one app-private writable expo-sqlite database initialized from an 
 
 Alternatives: Embedded object store; mobile ORM; separate attached read-only seed/user databases; retain a required server.
 
-Consequences: Queries/transactions/migrations are explicit and testable. Seed upgrades are data migrations/deltas, not replacement of a user database.
+Consequences: Queries/transactions/migrations are explicit and testable. The corrected Phase 2 API 36 verification passed the route-boundary check, all 12 sanitized disposable cases, recovery failure/Retry/Return cleanup, fresh Migration 001 bootstrap, and force-stop/relaunch. This includes checksummed bootstrap/rollback, composite foreign-key ownership, SQL bounds, returned integrity PRAGMAs, exclusive writes, stricter migration ordering, audit validation, lifecycle release, and disposable-cleanup checks. Seed upgrades are data migrations/deltas, not replacement of a user database.
 
 Revisit when: Catalog size/update evidence shows attached catalogs or a proven ORM materially improves maintenance without weakening transactions, FTS, migration control, or recovery.
 
@@ -258,17 +258,19 @@ Revisit when: A separate threat/legal/quality design is explicitly approved afte
 
 Date: 2026-07-13
 
-Status: Proposed/Deferred
+Revised: 2026-07-14
+
+Status: Accepted for the Phase 2 privacy-first baseline; export/import and native verification deferred
 
 Context: Meal history is sensitive, model files are large/re-downloadable, and third-party diagnostics can alter Play disclosures.
 
-Decision: Exclude database, model, staging, and cache from automatic Android backup until an encrypted user-understood design is approved. Plan explicit export/import. Select no analytics/crash SDK during architecture; any future provider must redact meal/query/prompt data and update privacy/Data Safety.
+Decision: Set `android.allowBackup` to `false` in Phase 2. This disables Android backup and restore for all application data, including the database, model/staging files, and cache. Until explicit export/import exists, device loss, replacement, or uninstall can lose local data. Plan an explicit user-understood export/import design; select no analytics/crash SDK during architecture; any future provider must redact meal/query/prompt data and update privacy/Data Safety.
 
 Alternatives: Default cloud backup; unencrypted broad export; analytics/crash SDK by default; no recovery/export path.
 
-Consequences: Device loss recovery is initially limited. Privacy/network behavior stays simple. Export encryption/retention and telemetry ownership remain unresolved.
+Consequences: Device loss recovery is initially limited, and the app cannot restore automatic Android backups. Privacy/network behavior stays simple. The config can be resolved in Phase 2, but generated-manifest and backup/restore proof require a later native/release test lane. Export encryption/retention and telemetry ownership remain unresolved.
 
-Revisit when: Phase 2/Play security review approves an export/backup format or Phase 9 demonstrates a diagnostics need and acceptable processor/retention controls.
+Revisit when: An export/import format has approved encryption, retention, and recovery semantics, or Phase 9 demonstrates a diagnostics need and acceptable processor/retention controls.
 
 ## D-017 — Production AAB, optional post-install model
 
@@ -352,13 +354,29 @@ Consequences: Phase 1 makes no predictive-Back claim. The current back stack rem
 
 Revisit when: Phase 9 Android hardening has an approved development-build lane and evidence for the selected native behavior.
 
+## D-022 — Phase 2 fixed-point safety contract
+
+Date: 2026-07-14
+
+Status: Accepted for Phase 2
+
+Context: SQLite permits signed 64-bit integers, while Expo JavaScript values are safe only through `Number.MAX_SAFE_INTEGER`. Nutrition calculations also cannot silently lose precision or overflow during quantity scaling and total aggregation.
+
+Decision: Persist all Phase 2 nutrient and quantity values as integers at scale `1,000,000`. Centralize scale/unscale and checked arithmetic in framework-independent TypeScript; reject non-representable precision, unsafe stored values, and unsafe intermediates. Match the JavaScript safe-integer upper bound in SQL `CHECK` constraints. User-facing display precision and any accepted ingress rounding remain Phase 3 decisions.
+
+Alternatives: Store SQLite `REAL`; use unbounded SQLite 64-bit integers across the JavaScript boundary; silently round/truncate inputs; add a decimal runtime dependency now.
+
+Consequences: Phase 2 has exact, portable storage behavior and explicit failure at numeric boundaries. Some future source values may require an approved normalization policy before import. No new decimal or crypto dependency is needed.
+
+Revisit when: Phase 3 approves an input/display rounding policy, or source evidence demonstrates that a different scale is required before any production nutrition data ships.
+
 ## Unresolved decision register
 
 | Owner decision | Needed by |
 |---|---|
 | Permanent store name, Android application ID authorization, brand/store owner | Before store configuration |
 | Local-model RAM/storage/chipset/device tiers | Phase 6 |
-| Exact decimal/storage rounding policy | Phase 2/3 |
+| User-facing decimal display and ingress rounding policy | Phase 3 |
 | Historical goal versions versus current-goal-only semantics | Phase 3 |
 | Licensed seed sources, IFCT permission/exclusion, provenance owner | Phase 4 |
 | Retrieval metrics and auto-selection thresholds | Phase 5 |
@@ -368,5 +386,5 @@ Revisit when: Phase 9 Android hardening has an approved development-build lane a
 | Telemetry/crash reporting and retention | Phase 9/Play |
 | Backend owner/region/auth/rate/cost/incident policy | Phase 10 |
 | Provider terms/attribution and cache TTLs | Phase 10 |
-| Backup/export encryption and retention | Phase 2/Play |
+| Backup/export encryption and retention | Before export/import or Play recovery claims |
 | Play account type, signing custody, support/privacy owners | Before Play setup |

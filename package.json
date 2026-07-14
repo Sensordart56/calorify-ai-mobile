@@ -9,6 +9,7 @@
     "expo-linking": "~57.0.2",
     "expo-router": "~57.0.4",
     "expo-splash-screen": "~57.0.2",
+    "expo-sqlite": "~57.0.0",
     "expo-status-bar": "~57.0.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -36,7 +37,9 @@
     "lint": "expo lint --max-warnings=0",
     "test": "jest --runInBand",
     "test:watch": "jest --watch",
-    "check": "npm run typecheck && npm run lint && npm run test"
+    "verify:routes": "node scripts/verify-route-tree.cjs",
+    "verify:migrations": "node scripts/verify-migrations.cjs",
+    "check": "npm run verify:routes && npm run verify:migrations && npm run typecheck && npm run lint && npm run test"
   },
   "private": true
 }

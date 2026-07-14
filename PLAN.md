@@ -1,6 +1,6 @@
 # Calorify Mobile Delivery Plan
 
-Last updated: 2026-07-14
+Last updated: 2026-07-15
 
 This plan deliberately separates product slices from high-risk native, data, and distribution work. A phase starts only after the prior gate is satisfied. If a gate fails, keep the last working phase intact and record the rollback or revised decision in docs/DECISIONS.md and HANDOFF.md.
 
@@ -25,8 +25,9 @@ Update HANDOFF.md after every meaningful implementation milestone and before int
 | Architecture/planning inspection and ten documents | Completed |
 | Phase 0 — Baseline, review cleanup, and provisional identity | Complete |
 | Phase 1 — Mobile shell and offline navigation | Complete on 2026-07-14; static checks and required representative API 36 runtime gate passed |
-| Phases 2–14 | Pending |
-| Emulator/device/runtime verification | Phase 0 shell verified; Phase 1 representative API 36 verification complete; no physical-device or model claims |
+| Phase 2 — SQLite foundation and migrations | Complete on 2026-07-15: corrected API 36 deep-link, disposable verification, recovery, fresh-bootstrap, and relaunch gates passed |
+| Phases 3–14 | Pending |
+| Emulator/device/runtime verification | Phase 0 shell and Phase 1 representative API 36 verification complete; Phase 2 API 36 database route-boundary, disposable harness, recovery, fresh Migration 001 bootstrap, and force-stop/relaunch checks complete; no physical-device or local-model runtime claims |
 
 ## Macro roadmap
 
@@ -173,6 +174,8 @@ Rollback:
 
 ## Phase 2 — SQLite foundation and migrations
 
+Status: complete on 2026-07-15. D-006 remains accepted. The corrected API 36 gate proved that a cold `/database-verification` deep link remains reachable outside the product database gate; all 12 disposable cases and the recovery failure/Retry/Return flow passed. After that proof, the owner explicitly authorized clearing Expo Go data on the Pixel_8 development emulator only, removing the obsolete pre-publication `calorify.db` with its superseded Migration 001 checksum. The fresh normal route then bootstrapped Migration 001 and reached Today; a force-stop and relaunch reached Today again with no red screen, JavaScript exception, or final Metro application error. This was development cleanup only, not production recovery behavior; no automatic reset was added. Migration 001 is immutable after publication.
+
 Deliverables:
 
 - Add expo-sqlite with a typed repository boundary.
@@ -192,6 +195,9 @@ Gate:
 
 - Schema version and migration history agree.
 - A failed migration never exposes a partially upgraded database.
+- Satisfied: the guarded verification route is structurally outside the product gate and remained reachable on a cold API 36 deep link despite the obsolete production-database checksum.
+- Satisfied: all 12 disposable integration cases and the intentional recovery failure/Retry/Return flow passed on API 36 without opening, resetting, or deleting `calorify.db`.
+- Satisfied: after the owner-authorized, development-only Expo Go clear, Migration 001 bootstrapped the normal database and Today survived a force-stop/relaunch with no application error.
 
 Rollback:
 

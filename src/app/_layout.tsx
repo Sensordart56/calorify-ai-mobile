@@ -12,13 +12,8 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="review" options={{ headerShown: true, title: 'Review meal' }} />
-        <Stack.Screen name="manual-entry" options={{ headerShown: true, title: 'Manual entry' }} />
-        <Stack.Screen name="goals" options={{ headerShown: true, title: 'Goals' }} />
-        <Stack.Screen name="food-library" options={{ headerShown: true, title: 'Food Library' }} />
-        <Stack.Screen name="models" options={{ headerShown: true, title: 'Models' }} />
-        <Stack.Screen name="about-data-sources" options={{ headerShown: true, title: 'About and Data Sources' }} />
+        <Stack.Screen name="(app)" />
+        <Stack.Screen name="database-verification" />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style={isDark ? 'light' : 'dark'} />

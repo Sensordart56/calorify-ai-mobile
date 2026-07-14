@@ -2,7 +2,7 @@
 
 Android-first, local-first mobile port of Calorify AI, built with Expo SDK 57, React Native 0.86, Expo Router, and strict TypeScript.
 
-The repository is currently at the Phase 0 gate. The stable navigation and quality-check foundation is implemented; nutrition, SQLite, local inference, model downloads, and online lookup are intentionally not implemented yet.
+Phase 1 is implemented for review: the app has a fixture-only mobile shell with offline navigation. Nutrition persistence, SQLite, local inference, model downloads, and online lookup are intentionally not implemented.
 
 ## Current product contract
 
@@ -37,11 +37,11 @@ Do not use that command unless the current phase explicitly calls for emulator v
 
 ## Current shell
 
-- Stable Expo Router JavaScript tabs: Today and Settings.
-- Feature screens live under src/features.
+- Stable Expo Router JavaScript tabs: Today, Log, History, and Settings.
+- Fixture-only routes: Review meal, Manual entry, Goals, Food Library, Models, and About and Data Sources.
+- Feature screens live under src/features; route files only compose those screens.
 - Framework-independent contracts live under src/core.
 - Shared presentation primitives live under src/shared.
-- Route files only compose feature screens.
 
 Identity currently used for development:
 
@@ -54,7 +54,7 @@ The Android application ID is documentation-only and is not configured or author
 
 ## Public repository and licensing
 
-The intended repository is https://github.com/Sensordart56/calorify-ai-mobile, owned by the Sensordart56 GitHub account. This local checkout has no remote configured; repository creation, remote setup, commit, push, signing, deployment, and publishing are separate owner-authorized actions.
+The intended repository is https://github.com/Sensordart56/calorify-ai-mobile, owned by the Sensordart56 GitHub account. The configured remote is https://github.com/Sensordart56/calorify-ai-mobile.git. Commit, push, signing, deployment, and publishing remain separate owner-authorized actions.
 
 The root MIT LICENSE intentionally covers the original Calorify AI Mobile application source in this repository and preserves the Expo template notice. It does not automatically relicense:
 

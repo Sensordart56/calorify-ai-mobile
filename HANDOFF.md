@@ -2,149 +2,45 @@
 
 Last updated: 2026-07-14
 
-## Project and checkpoint
+## Current state
 
-Calorify AI Mobile is the Android-first, local/manual-first port of the legacy Calorify application.
+- Repository: `C:\B Drive\Apps\calorify-ai-mobile`
+- Read-only legacy reference: `C:\B Drive\Apps\Calorify AI`
+- Branch: `feature/phase-1-mobile-shell`
+- Base: `5b94d07` / `origin/main`
+- Phase 0: complete and published.
+- Phase 1: complete on 2026-07-14.
+- Phase 2: not started and not authorized.
+- Working tree: all Phase 1 changes are intentionally unstaged. Nothing has been staged, committed, pushed, merged, or released.
 
-- Writable repository on the current owner workstation: `C:\B Drive\Apps\calorify-ai-mobile`
-- Read-only legacy reference on the current owner workstation: `C:\B Drive\Apps\Calorify AI`
-- Public mobile repository: https://github.com/Sensordart56/calorify-ai-mobile
-- Public legacy repository: https://github.com/Sensordart56/calorifyai-react-webapp
-- Branch: `main`, tracking `origin/main`
-- Origin: https://github.com/Sensordart56/calorify-ai-mobile.git
-- Phase 0 checkpoint commit: `34b29c540dfcf729d9e4d431a2263420ca3c298c`
-- Initial public push: successful on 2026-07-14
-- Working tree: clean after the repository handoff commit
-- Current phase: Phase 0 complete and published
-- Next implementation phase: Phase 1 is pending and is not authorized
+## Implementation and test status
 
-The Phase 0 checkpoint and this documentation-only handoff were committed and pushed under explicit owner authorization. No pull request, release, tag, issue, signing action, artifact upload, deployment, repository-setting change, or other external action was performed.
+- Added stable JavaScript tabs: Today, Log, History, and Settings; stack routes for Review meal, Manual entry, Goals, Food Library, Models, and About/Data Sources.
+- Added fixture-only presentation state and accessible shared controls. Route files only compose feature screens.
+- Added no persistence, nutrition calculation, SQL, food data, networking, model runtime, native project, dependency, permission, EAS, signing, or release configuration.
+- `npx jest src/features/shell/screens/phase-one-accessibility.test.tsx --runInBand` passed: 1 suite, 15 tests. It covers headings, exact Today/Log/Settings `router.push` destinations, fixture labeling, and state accessibility semantics.
+- Earlier full static verification passed: `npm run typecheck`; `npx eslint . --no-cache --max-warnings=0`; `npm run lint`; `npm test -- --runInBand`; `npm run check`; `npx expo config --type public --json`; `$env:EXPO_OFFLINE='1'; npx expo install --check`; and `git diff --check`. The full Jest run passed 4 suites and 18 tests. After this closure update, `npm run check` again passed (4 suites, 18 tests), `npx expo config --type public --json` confirmed portrait orientation and `predictiveBackGestureEnabled: false`, offline `npx expo install --check` reported dependencies up to date with its expected offline-validation warning, and `git diff --check` passed.
 
-## Completed Phase 0 work
+## API 36 runtime evidence
 
-- Kept the Expo SDK 57 baseline: Expo 57.0.4, React Native 0.86.0, React 19.2.3, TypeScript 6.0.3 strict, and New Architecture.
-- Replaced the starter unstable/custom tab paths with stable Expo Router JavaScript Tabs.
-- Added minimal Today and Settings routes backed by feature screens, plus `src/core`, `src/features`, and `src/shared` boundaries.
-- Added shared accessible screen/card primitives, a root error-boundary convention, a not-found route, strict linting, Jest configuration, and deterministic repository scripts.
-- Applied the approved provisional development identity: display name `Calorify AI`, slug `calorify-ai-mobile`, and URL scheme `calorify`.
-- Kept candidate Android application ID `com.sensordart56.calorify` documentation-only and unconfigured because it is not approved for Play/store use.
-- Documented Android 7/API 24 as the manual-app configuration floor. Permanent local-model RAM, storage, chipset, and device tiers remain a Phase 6 physical ARM64 decision.
-- Added explicit MIT source licensing, public-repository safeguards, cross-platform line-ending policy, and read-only GitHub Actions checks.
-- Removed only proven-unused starter demo assets, code, reset script, and direct dependencies. The complete item-by-item rationale is in `docs/PHASE_0_AUDIT.md`.
+Completed on the Pixel 8 Android 16/API 36 x86_64 emulator:
 
-No SQLite, food data, llama.rn, sqlite-vec, model files, backend, online lookup, analytics, native project, signing, or Phase 1 screen set was added.
+- Light-mode navigation: all four tabs; Today to Log; Manual entry; Log to Review; History; Settings to Goals, Food Library, Models, and About/Data Sources; ordinary Android Back from secondary routes; scrolling and action reachability.
+- Dark mode and 1.3x font scale: clean launch to Today without a red screen; representative Manual Entry, Settings, and Food Library inspection. Headings, status badges, cards, labels, fields, long Settings labels, fixture warnings, list rows, borders, and controls remained readable with no observed clipping or overlap.
+- Manual Entry: entered representative food text and decimal Fat value; the top and final fields could be focused and scrolled into view; scrolling worked with the numeric keyboard open; Android Back dismissed the keyboard before leaving; the bottom `Keep editing draft` action remained reachable after dismissal; no red screen appeared.
+- Settings: the representative Models destination opened and ordinary Android Back returned to Settings.
+- Food Library: matching `oats` showed fixture results, non-matching `zzz` showed `No fixture foods found`; the normal text keyboard dismissed with Android Back; scrolling worked and `Add food manually` remained reachable.
+- Orientation: a single landscape rotation request left the app in portrait (`[0,0][1080,2400]`, rotation `0`), consistent with the configured portrait policy.
+- Lifecycle: after restoring light mode, font scale 1.0, and normal rotation settings, Expo Go was force-stopped and relaunched through active Metro. Today and all four tabs loaded, with no red error screen and no final Metro application error.
 
-## Public-repository review
+Predictive Back is not enabled (`predictiveBackGestureEnabled: false`) and was not verified in Expo Go. Under D-021 it is deferred to Phase 9; Phase 1 verifies ordinary Android Back and configured portrait orientation only.
 
-The bounded Phase 0 scan found:
+Deferred: comprehensive screen-by-screen dark-mode and keyboard coverage, TalkBack, Predictive Back, API 35/API 37, physical devices, ARM64, model/performance/thermal, and Play verification. These belong to Phase 9 or their designated later gate.
 
-- No `.env` file, `foods.csv`, signing key/certificate, database, model weight, APK/AAB, or other release artifact in the publishable tree.
-- No recognized private-key, GitHub-token, AWS-key, OpenAI-key, Slack-token, or assigned API-key/secret/password/token pattern.
-- No unexpected Git remote or external GitHub state was found before publication; the authorized destination was empty.
-- Owner-workstation absolute paths only in planning/handoff context, where they are explicitly labeled local and non-portable.
-- MIT covers original application source; dependencies, retained provisional Expo-derived assets, future data, and future models remain subject to their own licenses.
+## Next action
 
-The retained icon, adaptive-icon, favicon, splash, and `assets/expo.icon` files are provisional Expo-derived development assets referenced by app configuration. Final brand assets remain an owner decision.
+Human review and publication of Phase 1. Phase 2 remains pending and is not authorized. Preserve this unstaged Phase 1 work; do not begin Phase 2 or stage, commit, push, merge, or release.
 
-## Runtime evidence
+## Continuation prompt
 
-The Phase 0 shell was verified with Expo Go on the already-running `Pixel_8` AVD:
-
-- Android 16/API 36, 1080 × 2400, reported emulator model `sdk_gphone64_x86_64`.
-- App launch to Today.
-- Today and Settings content and two-way tab switching.
-- Corrected provisional identity copy and tab labels without missing-glyph icons.
-- Readability in light and dark themes.
-- Basic Android text scaling at `1.3`; Today and Settings app content remained readable without clipping.
-- Android back from Settings returned to Today; the next back returned to the launcher.
-- Expo Go force-stop and relaunch succeeded through the emulator host address `exp://10.0.2.2:8081`.
-- A final default-display relaunch succeeded with light mode and font scale `1.0` restored.
-
-During server turnover, Expo Go briefly showed its development-only connection/reloading UI. Reconnecting through Android's standard emulator host address completed successfully; no application error overlay was present in the final checks.
-
-This is x86_64 emulator UI/behavior evidence only. It is not evidence for a physical phone, ARM64 compatibility, model feasibility, memory, latency, thermal behavior, battery behavior, or Play device support.
-
-After verification:
-
-- Expo Go was force-stopped.
-- The Metro process was stopped and port 8081 was confirmed to have no listener.
-- The emulator was killed and `adb devices` reported no attached devices.
-
-Future equivalent shell verification, after explicitly starting an API 36 AVD, is:
-
-```powershell
-npm run android
-```
-
-Future model verification remains gated on representative physical ARM64 phones in Phase 6.
-
-## Checks
-
-The Phase 0 checkpoint passes:
-
-```powershell
-npm run typecheck
-npx eslint . --no-cache --max-warnings=0
-npm run lint
-npm test -- --runInBand
-npm run check
-npx expo config --type public --json
-git diff --check
-```
-
-Additional evidence:
-
-- `EXPO_OFFLINE=1 npx expo install --check` reports dependencies aligned, with Expo's expected offline-validation warning.
-- Two Jest suites and two tests pass.
-- Public Expo configuration resolves SDK 57, name `Calorify AI`, slug `calorify-ai-mobile`, and scheme `calorify`, with no Android package configured.
-- `.github/workflows/ci.yml` parses as YAML and runs Node 22, `npm ci`, and `npm run check` for pushes and pull requests to `main`; it does not publish, sign, deploy, or upload artifacts.
-- `.gitattributes` classifies source/configuration as normalized text and binary assets as binary.
-- `npm ls --depth=0` passes.
-
-The Phase 0 checkpoint was committed and pushed after the checks passed. The documentation-only handoff commit leaves the working tree clean on `main`, tracking `origin/main`.
-
-## Notable review corrections
-
-- TypeScript-only ESLint rules are scoped to `*.ts`/`*.tsx`.
-- Documentation consistently selects stable Expo Router Tabs.
-- The app scheme now matches the approved provisional `calorify` value.
-- The manual-app API 24 configuration floor is separate from future physical model-capability tiers.
-- “Committed commands” wording was removed; these are repository scripts in an uncommitted tree.
-- Proven-unused demo assets and direct dependencies were removed and individually documented.
-- Public-source license, `.gitattributes`, CI, secret/data/model/signing exclusions, and scan evidence were added.
-
-## Remaining owner decisions
-
-These do not block the Phase 0 checkpoint but must be resolved before the indicated later work:
-
-- Permanent store name, Android application ID authorization, final brand assets, store organization, and signing custody: before store/native release configuration.
-- Licensed seed sources, IFCT permission/exclusion, and provenance ownership: Phase 4.
-- Model acceptance thresholds, representative physical phones, permanent device tiers, model hosting, manifest signing, and hashing implementation: Phases 6–7.
-- Telemetry/no-telemetry and encrypted export/backup policy: Phase 9/Play readiness.
-- Online backend privacy, region, abuse controls, retention, cost, provider terms, and operations: Phase 10.
-
-## Exact next task
-
-Review the published Phase 0 checkpoint. Begin Phase 1 only if the owner separately authorizes it; do not infer Phase 1 authorization from Phase 0 completion or publication.
-
-## Do not do
-
-- Do not edit the local legacy reference or copy its `foods.csv`.
-- Do not start Phase 1, SQLite, llama.rn, model/data/backend work, native generation, or online lookup without separate authorization.
-- Do not configure the candidate Android application ID as if it were store-approved.
-- Do not make physical-device/model/performance claims from this emulator run.
-- Do not perform further Git publication, signing, upload, deployment, or release actions without explicit approval.
-
-## Copyable continuation prompt
-
-```text
-Continue Calorify AI Mobile from C:\B Drive\Apps\calorify-ai-mobile.
-
-Read AGENTS.md, PLAN.md, HANDOFF.md, docs/ARCHITECTURE.md, docs/DECISIONS.md, and docs/PHASE_0_AUDIT.md. Before changing Expo code, read the exact relevant Expo SDK 57 documentation at https://docs.expo.dev/versions/v57.0.0/.
-
-Phase 0 is complete and published at commit 34b29c540dfcf729d9e4d431a2263420ca3c298c. The local branch is main, tracks origin/main, and the authorized public repository is https://github.com/Sensordart56/calorify-ai-mobile. Phase 1 is not authorized. Do not add Phase 1 screens, SQLite, llama.rn, models, food data, backend/online work, native projects, signing, further publishing, or legacy-repository changes.
-
-Preserve the provisional identity: Calorify AI, calorify-ai-mobile, and calorify. Keep com.sensordart56.calorify documentation-only until store identity is explicitly approved. Treat Android 7/API 24 only as the manual-app configuration floor; physical ARM64 tests in Phase 6 decide model/device tiers.
-
-If asked to review the checkpoint, inspect only. If separately authorized to begin another phase or perform Git/external actions, state that authority precisely and update PLAN.md, docs/DECISIONS.md, and HANDOFF.md with exact evidence.
-```
+Review the completed Phase 1 change set in `C:\B Drive\Apps\calorify-ai-mobile` on `feature/phase-1-mobile-shell`, based on `5b94d07`/`origin/main`, and publish it only with explicit human authorization. Phase 0 is complete and published; Phase 1 is complete; Phase 2 is pending and not authorized. Confirm the working tree remains unstaged. Predictive Back remains deferred to Phase 9 under D-021. Do not begin Phase 2 or stage, commit, push, merge, or release.

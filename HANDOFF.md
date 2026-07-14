@@ -11,11 +11,16 @@ Last updated: 2026-07-15
 - Phase 0: complete and published.
 - Phase 1: merged into `main` through pull request #1 on 2026-07-14; merge commit `6159532`.
 - Before Phase 2 planning, local `main` was clean and synchronized with `origin/main` at `6159532`.
-- Phase 2: complete on 2026-07-15. The corrected API 36 deep-link, disposable verification, recovery, fresh-bootstrap, and force-stop/relaunch gates passed. All implementation changes remain unstaged; no commit, push, native project generation, release, or deployment occurred.
+- Phase 2: complete on 2026-07-15. The corrected API 36 deep-link, disposable verification, recovery, fresh-bootstrap, and force-stop/relaunch gates passed.
+- Implementation commit: `e3219ec31dfb2ddd20955e578e5397de20e503c9` (`feat: implement phase 2 SQLite foundation`).
+- Published branch: `feature/phase-2-sqlite-foundation`, tracking `origin/feature/phase-2-sqlite-foundation`; remote feature head is `e3219ec31dfb2ddd20955e578e5397de20e503c9` before this handoff commit.
+- `main` and `origin/main` remain unchanged at `6159532406baa53227e321224583e00993f7e7ee`. No pull request, merge, tag, release, deployment, native-project generation, or Phase 3 work occurred.
 - Owner planning decisions approved: fixed-point storage scale `1,000,000` with JavaScript-safe arithmetic constraints, and privacy-first `android.allowBackup: false` with the documented no-backup/no-restore recovery tradeoff.
 - Implemented the revised contract: checksum verification through `npm run check`, atomic checksummed Migration 001 bootstrap, returned-PRAGMA validation, and a disposable development-only Android integration route. D-006 is accepted based on the completed API 36 evidence.
 - Phase 1 publication: `e193209` (`feat: implement phase 1 mobile shell`) and `d05b6c9` (`docs: record phase 1 publication handoff`) remain ancestors of `main`; retain the existing local and remote Phase 1 branch.
-- `expo-sqlite` was installed at the SDK-compatible version. No native project generation, commit, push, merge, tag, release, deployment, or publishing occurred.
+- `expo-sqlite` was installed at the SDK-compatible version. No native project generation, merge, tag, release, deployment, or production publishing occurred.
+- Final publication verification passed: `npm run check` (13 suites, 71 tests), public Expo configuration (`android.allowBackup: false` and `expo-sqlite` plugin), offline `npx expo install --check`, `git diff --check`, migration checksum verification, and intended-scope/artifact inspection.
+- Accepted backup limitation: `android.allowBackup=false` disables Android backup and restore for all application data. Until export/import exists, uninstall, device loss, or replacement can lose local data.
 
 ## Implementation and test status
 
@@ -86,8 +91,8 @@ Deferred: comprehensive screen-by-screen dark-mode and keyboard coverage, TalkBa
 
 ## Next action
 
-Phase 2 is complete. The next safe action is human review of the unstaged Phase 2 diff and, only with separate authorization, an intentional commit/pull-request workflow. Do not begin Phase 3, generate native projects, publish, deploy, or perform store actions.
+Phase 2 is published on its feature branch and ready for human review. Only with separate authorization, open a pull request; do not begin Phase 3, generate native projects, merge, tag, publish a release, deploy, or perform store actions.
 
 ## Continuation prompt
 
-Phase 2 is complete and unstaged on `feature/phase-2-sqlite-foundation`; do not expand into Phase 3 without separate authorization. Its corrected source, static, export, and API 36 evidence are recorded above. Retain Migration 001 unchanged. Predictive Back remains deferred to Phase 9 under D-021.
+Phase 2 is complete and published on `feature/phase-2-sqlite-foundation`; do not expand into Phase 3 without separate authorization. Its corrected source, static, export, and API 36 evidence are recorded above. Retain Migration 001 unchanged. Predictive Back remains deferred to Phase 9 under D-021.

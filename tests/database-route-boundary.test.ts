@@ -10,14 +10,17 @@ describe('Phase 2 database route boundary', () => {
     expect(rootLayout).toContain('<Stack screenOptions={{ headerShown: false }}>');
     expect(rootLayout).toContain('<Stack.Screen name="(app)" />');
     expect(rootLayout).toContain('<Stack.Screen name="database-verification" />');
+    expect(rootLayout).toContain('<Stack.Screen name="manual-logging-verification" />');
     expect(rootLayout).toContain('<Stack.Screen name="+not-found" />');
     expect(rootLayout).not.toMatch(/usePathname|DatabaseInitializationGate|openExpoDatabase|calorify\.db/);
   });
 
   test('keeps the verification and not-found routes outside the gated product group', () => {
     expect(existsSync(join(appRoot, 'database-verification.tsx'))).toBe(true);
+    expect(existsSync(join(appRoot, 'manual-logging-verification.tsx'))).toBe(true);
     expect(existsSync(join(appRoot, '+not-found.tsx'))).toBe(true);
     expect(existsSync(join(appRoot, '(app)', 'database-verification.tsx'))).toBe(false);
+    expect(existsSync(join(appRoot, '(app)', 'manual-logging-verification.tsx'))).toBe(false);
     expect(existsSync(join(appRoot, '(app)', '+not-found.tsx'))).toBe(false);
   });
 

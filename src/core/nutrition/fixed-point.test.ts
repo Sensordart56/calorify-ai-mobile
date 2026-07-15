@@ -1,4 +1,4 @@
-import { checkedAdd, checkedMultiplyDivide, FIXED_POINT_SCALE, FixedPointError, scaleDecimal, unscaleDecimal } from './fixed-point';
+import { checkedAdd, checkedMultiplyDivide, checkedMultiplyDivideHalfUp, FIXED_POINT_SCALE, FixedPointError, scaleDecimal, unscaleDecimal } from './fixed-point';
 
 describe('fixed-point nutrition values', () => {
   test('round-trips canonical decimals at the approved scale', () => {
@@ -18,5 +18,16 @@ describe('fixed-point nutrition values', () => {
     expect(checkedMultiplyDivide(2_000_000, 3, 3)).toBe(2_000_000);
     expect(() => checkedMultiplyDivide(Number.MAX_SAFE_INTEGER, 2, 1)).toThrow(FixedPointError);
     expect(() => checkedMultiplyDivide(1, 1, 2)).toThrow(FixedPointError);
+  });
+
+  test('cross-cancels and rounds derived values safely', () => {
+    expect(checkedMultiplyDivideHalfUp(100_000_000, 100_000_000, 100_000_000)).toBe(100_000_000);
+    expect(checkedMultiplyDivideHalfUp(1_000_000, 1, 1_000)).toBe(1_000);
+    expect(checkedMultiplyDivideHalfUp(1_000_000, 1_000, 1)).toBe(1_000_000_000);
+    expect(checkedMultiplyDivideHalfUp(1, 1, 3)).toBe(0);
+    expect(checkedMultiplyDivideHalfUp(1, 1, 2)).toBe(1);
+    expect(checkedMultiplyDivideHalfUp(2, 1, 3)).toBe(1);
+    expect(checkedMultiplyDivideHalfUp(0, Number.MAX_SAFE_INTEGER, 1)).toBe(0);
+    expect(() => checkedMultiplyDivideHalfUp(Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER, 2)).toThrow(FixedPointError);
   });
 });

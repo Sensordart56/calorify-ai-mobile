@@ -2,7 +2,7 @@ import type { DatabaseConnection } from '@/core/database/contracts';
 import { requireApplicationVersion } from '@/core/application/app-version';
 import { DatabaseInitializationError } from '@/core/database/errors';
 import type { MigrationDefinition } from '@/core/database/migrations';
-import { phaseTwoMigrations } from '@/core/database/migrations';
+import { appMigrations } from '@/core/database/migrations';
 import { requireUtcTimestamp } from '@/core/time/utc-timestamp';
 
 const BUSY_TIMEOUT_MILLISECONDS = 3_000;
@@ -61,7 +61,7 @@ function validateDefinitions(migrations: readonly MigrationDefinition[]): readon
 export async function initializeDatabase(
   connection: DatabaseConnection,
   appVersion: string,
-  migrations: readonly MigrationDefinition[] = phaseTwoMigrations,
+  migrations: readonly MigrationDefinition[] = appMigrations,
   now: () => string = () => new Date().toISOString(),
   reportStep: InitializationStepObserver = () => undefined,
 ): Promise<void> {

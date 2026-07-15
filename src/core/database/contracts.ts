@@ -1,14 +1,15 @@
 export type SqlValue = string | number | null | boolean;
+export type DatabaseMutationResult = Readonly<{ changes: number }>;
 
 export interface DatabaseExecutor {
   exec(sql: string): Promise<void>;
-  run(sql: string, params: readonly SqlValue[]): Promise<void>;
+  run(sql: string, params: readonly SqlValue[]): Promise<DatabaseMutationResult>;
   first<Row extends object>(sql: string, params?: readonly SqlValue[]): Promise<Row | null>;
   all<Row extends object>(sql: string, params?: readonly SqlValue[]): Promise<readonly Row[]>;
 }
 
 export interface DatabaseConnection extends DatabaseExecutor {
-  withExclusiveTransaction(task: (transaction: DatabaseExecutor) => Promise<void>): Promise<void>;
+  withExclusiveTransaction<Result>(task: (transaction: DatabaseExecutor) => Promise<Result>): Promise<Result>;
   close(): Promise<void>;
 }
 

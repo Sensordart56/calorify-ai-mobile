@@ -1,20 +1,20 @@
 # Current Handoff
 
-Last updated: 2026-07-15
+Last updated: 2026-07-16
 
 ## Current state
 
 - Repository: `C:\B Drive\Apps\calorify-ai-mobile`
 - Read-only legacy reference: `C:\B Drive\Apps\Calorify AI`
-- Branch: `feature/phase-2-sqlite-foundation` (local only; no upstream configured)
-- Base: `6159532` / `origin/main`
+- Branch: `feature/phase-3-manual-logging` (local planning branch; no upstream configured)
+- Base: `dd3d54a2d9117883ca6b5ecd8fcafa08d1eb7f56` / `origin/main`
 - Phase 0: complete and published.
 - Phase 1: merged into `main` through pull request #1 on 2026-07-14; merge commit `6159532`.
 - Before Phase 2 planning, local `main` was clean and synchronized with `origin/main` at `6159532`.
-- Phase 2: complete on 2026-07-15. The corrected API 36 deep-link, disposable verification, recovery, fresh-bootstrap, and force-stop/relaunch gates passed.
+- Phase 2: merged into `main` through pull request #2 on 2026-07-15; merge commit `dd3d54a`. The corrected API 36 deep-link, disposable verification, recovery, fresh-bootstrap, and force-stop/relaunch gates passed.
 - Implementation commit: `e3219ec31dfb2ddd20955e578e5397de20e503c9` (`feat: implement phase 2 SQLite foundation`).
-- Published branch: `feature/phase-2-sqlite-foundation`, tracking `origin/feature/phase-2-sqlite-foundation`; remote feature head is `e3219ec31dfb2ddd20955e578e5397de20e503c9` before this handoff commit.
-- `main` and `origin/main` remain unchanged at `6159532406baa53227e321224583e00993f7e7ee`. No pull request, merge, tag, release, deployment, native-project generation, or Phase 3 work occurred.
+- Publication commit: `f99759f11e5510ad1278e68f4092e4c25e48eaab` (`docs: record phase 2 publication handoff`). The Phase 2 implementation and publication commits are ancestors of `main`.
+- Before Phase 3 planning, local `main` and `origin/main` were synchronized, clean, and at `dd3d54a2d9117883ca6b5ecd8fcafa08d1eb7f56`. No native-project generation, dependency installation, implementation, commit, push, or pull request occurred during this planning pass.
 - Owner planning decisions approved: fixed-point storage scale `1,000,000` with JavaScript-safe arithmetic constraints, and privacy-first `android.allowBackup: false` with the documented no-backup/no-restore recovery tradeoff.
 - Implemented the revised contract: checksum verification through `npm run check`, atomic checksummed Migration 001 bootstrap, returned-PRAGMA validation, and a disposable development-only Android integration route. D-006 is accepted based on the completed API 36 evidence.
 - Phase 1 publication: `e193209` (`feat: implement phase 1 mobile shell`) and `d05b6c9` (`docs: record phase 1 publication handoff`) remain ancestors of `main`; retain the existing local and remote Phase 1 branch.
@@ -89,10 +89,150 @@ Predictive Back is not enabled (`predictiveBackGestureEnabled: false`) and was n
 
 Deferred: comprehensive screen-by-screen dark-mode and keyboard coverage, TalkBack, Predictive Back, API 35/API 37, physical devices, ARM64, model/performance/thermal, and Play verification. These belong to Phase 9 or their designated later gate.
 
-## Next action
+## Phase 3 planning contract and implementation record
 
-Phase 2 is published on its feature branch and ready for human review. Only with separate authorization, open a pull request; do not begin Phase 3, generate native projects, merge, tag, publish a release, deploy, or perform store actions.
+## 2026-07-15 Phase 3A implementation status
+
+- Owner authorized Phase 3A only and approved `expo-crypto`; `npx expo install expo-crypto` installed `expo-crypto@57.0.1` with only `package.json` and `package-lock.json` dependency changes. It is used only by injected `ExpoIdGenerator` through `Crypto.randomUUID()`.
+- Added Migration 002, app-wide ordered migrations, generic exclusive transaction results, GCD cross-cancelled half-up arithmetic, local-date/display utilities, manual-logging repository boundary, and development-only `/manual-logging-verification` root sibling.
+- Strict type checking and 16 Jest suites / 75 tests passed. Migration 001 is unchanged. Full static/export/public-tree checks and the authorized API 36 disposable-route gate remain required; checkpoint 3A is not complete.
+- `npm run check`, migration verification, public Expo configuration, Android export, and `git diff --check` passed after implementation. The Android export produced one bundle (1,318 modules). The correct offline command, `$env:EXPO_OFFLINE='1'; npx expo install --check; Remove-Item Env:EXPO_OFFLINE`, reports dependencies up to date with its expected offline-validation warning. Newer network-backed Expo patch recommendations are deferred maintenance only; do not update existing Expo packages in Phase 3A. Placeholder verification cases and incomplete repository/use-case coverage remain blocking work; do not start Metro/emulator or mark 3A complete.
+- Continued 3A with `src/core/application/manual-logging-use-cases.ts`: linked reviewed food/revision validation occurs before a write transaction; reviewed portions require exact ID, food ownership, and normalized label; create/edit meal recomputes and re-sums persisted snapshots through the supplied exclusive transaction executor; portion replacement is validate, delete old, insert replacement, commit. Focused type checking passed. Remaining required implementation is the concrete food/portion/goal/meal/query writer repositories, the textual Migration 001 fixture and fixture-driven migration tests, and replacing every verification-case placeholder with its real isolated operation and assertions.
+- Bounded application pass: `validateMealCommand` now rejects invalid categories, timestamp/local-date context, offset, empty meals, malformed/half-null links, quantity, names/units, resolution methods, and portion IDs before IDs are generated or an exclusive transaction opens. Reviewed items are resolved sequentially, preserving deterministic query/ID order; persisted totals use explicit four-field equality rather than JSON serialization. Focused `manual-logging-use-cases` tests and `npm run typecheck` passed. Concrete writer/query repositories, expanded lifecycle/goal/query tests, textual fixture, and real disposable cases remain incomplete.
+- Bounded database-abstraction pass: `DatabaseExecutor.run` now returns the framework-independent `{ changes }` result; the Expo adapter maps and validates only the native affected-row count, while migration and Phase 2 fakes were updated. Application validation now rejects whitespace IDs/names/units/portion IDs, validates generated IDs and UTC clock output before writes, and validates delete IDs before a transaction. Focused application/data-SQLite Jest selection passed (4 suites / 18 tests) with strict type checking and `git diff --check`. Concrete affected-row repository semantics, port extraction, and repository query/mapping tests remain incomplete.
+
+## 2026-07-15 Phase 3A repository implementation pass
+
+- Extracted `ManualLoggingWriter` and application-facing food state, portion, goal, meal header/item/detail, Today summary, history cursor/page, and required-total types into `src/core/application/manual-logging-ports.ts`. Application code remains SQLite/Expo-type free. Required meal/item/update/delete and replacement-portion mutations now require exactly one changed row within the existing exclusive transaction.
+- `SqliteManualLoggingRepository` now uses only a supplied `DatabaseExecutor`. It implements current-review and food-state loads; immutable revision insert/current-pointer move; archive; portion insert/delete; exact/applicable goals; meal header/existence/detail; meal/item writes; persisted total aggregation; Today by saved `local_date`; and bounded keyset history (`occurred_at_utc DESC, id ASC`). Dynamic values are parameter-bound. Returned rows validate IDs/text, safe integer values, nullable nutrients, 0/1 booleans, enum fields, UTC/local dates, offset bounds, and item positions; malformed values raise `RepositoryIntegrityError`.
+- Added recording-executor query/mapping tests and direct Expo mutation-result adapter tests. The adapter maps `changes` 0, 1, and 37, rejects negative/non-integer/unsafe values, and returns only `{ changes }`. Repository tests cover hostile-value binding, goals, Today/history order/cursors, mutation propagation, nullable snapshot nutrients, and malformed rows. These are construction/mapping tests, not real-SQLite evidence.
+- This pass did not create/open a database, work on the retained Migration 001 fixture or disposable verification cases, start Metro, or start an emulator. `npm run typecheck` and `npx jest src/data/sqlite --runInBand` passed (3 suites, 23 tests). Remaining 3A work: fuller manual-food/goal/query use cases and tests, textual Migration 001 fixture plus migration upgrade/rollback tests, real isolated verification cases, complete static/export/config verification, and owner-run API 36 evidence. Phase 3A remains incomplete.
+- After the import cleanup, the requested full static gate also passed: `npm run check` (route/migration verification, strict type checking, zero-warning lint, 18 Jest suites / 94 tests) and `git diff --check`. No runtime process was started.
+
+## 2026-07-16 Phase 3A application and repository hardening pass
+
+- Corrected migration checksum verification to pass UTF-8 directly to Node crypto. `npm run verify:migrations` validates the immutable Migration 001 and Migration 002 checksums without the browser-ESLint-incompatible `Buffer` global.
+- Hardened manual-logging SQLite reads: validated local-date inputs, checked Today aggregation, typed safe-integer `SUM` mapping, `limit + 1` history paging, whitespace/hash/link validation, and corrupt meal-detail detection (zero, duplicate, or non-contiguous item positions). The repository still uses only its supplied executor; recording-executor tests remain query/mapping evidence, not a real SQLite run.
+- Completed application-layer manual food/revision/archive, portion creation/replacement, same-day goal save, and read-query methods. All use injected ID/clock/database ports, validate before writes, use one exclusive transaction per authoritative mutation, require one changed row where required, and preserve not-found/stale/storage distinctions. Manual food commands are explicitly source-less/user-modified; external source creation is not part of this manual-only checkpoint and cannot be silently dropped.
+- Verification in this pass: `npm run verify:migrations`; `npm run typecheck`; `npx eslint . --no-cache --max-warnings=0`; and focused application/data-SQLite Jest (6 suites, 39 tests) all passed. The final `npm run check` also passed (19 suites, 100 tests), as did the offline `npx expo install --check` (dependencies up to date; expected offline-validation reliability warning) and `git diff --check`. Tracked/untracked inspection found only the ongoing Phase 3A docs/code/tests/migration work—no databases, native projects, credentials, release files, or Phase 3B/3C artifacts. No fixture, disposable route/case, product UI, Metro, emulator, database, native project, dependency, staging, commit, push, or PR work occurred.
+
+## 2026-07-16 Phase 3A non-runtime continuation
+
+- Added the retained shared runtime-safe Migration 001 fixture and identity coverage; corrected the README’s stale Phase 1-only persistence statement; added the manual verification root-sibling boundary assertions; and constrained the verification runner to the five consolidated case IDs and literal Phase 3 disposable database authority. Configuration resolves `android.allowBackup: false`, portrait orientation, `predictiveBackGestureEnabled: false`, and the `expo-sqlite` plugin; `expo-crypto@57.0.1` resolves as the sole Phase 3 dependency addition.
+- A bounded Android export completed to `C:\tmp\calorify-phase3-export`: one Android Hermes bundle (1,310 modules), no repository artifact, and no test/Jest/Testing Library/Node-only marker found in the bundle scan. Full static verification passed after these changes: `npm run check` (21 suites / 104 tests), migration/route checks, strict type checking, zero-warning lint, offline dependency check, and `git diff --check`.
+- This continuation did **not** complete Phase 3A or make it ready for API 36. Although the route had the five-case registry, its handlers still required the approved real migration-upgrade/rollback, foreign-key mutation, stale-save, snapshot, transaction-rollback, goal, and Today evidence before requesting the owner-assisted API 36 gate.
+
+## 2026-07-16 Phase 3A verification continuation
+
+- Added a deterministic stateful Migration 001 fixture fake to migration-runner tests. It tracks the version-one ledger, user version, fixture preservation, executed Migration 002 statements, migration writes, and transaction snapshot/restore. Focused tests now prove fixture upgrade/idempotency and injected Migration 002 rollback/recovery; this remains deterministic-fake evidence, not real SQLite evidence.
+- Converted the disposable route’s `migration-001-upgrade` and `migration-002-rollback` handlers to real Phase 3 disposable SQLite operations: they bootstrap only Migration 001, seed the retained fixture, then respectively upgrade or inject a test-only failing v2 definition before recovering with the immutable real Migration 002. At this historical checkpoint, the remaining consolidated meal, rollback, and goal/Today handlers were still incomplete and were not API 36 evidence.
+
+## 2026-07-16 Phase 3A consolidated five-scenario correction
+
+- `migration-001-upgrade` now bootstraps and seeds only Migration 001 from the shared runtime-safe fixture, closes/reopens for the real Migration 002 upgrade, verifies the exact version/ledger/fixture relationships, closes/reopens again, and proves idempotency. `migration-002-rollback` verifies the exact version-one ledger and fixture plus absence of partial schema before recovery with the immutable real Migration 002.
+- `meal-create-and-integrity` now verifies the complete real repository/use-case header and ordered snapshots, all required and nullable nutrients, exact four-nutrient totals, real SQLite composite-ownership and both half-null rejections, typed stale-review failure, and unchanged parent/child counts. `meal-transaction-rollback` delegates real later child inserts before injected failure and proves failed creation leaves no rows while failed editing preserves the exact prior meal and children.
+- `goal-and-today-queries` now verifies same-date goal replacement identity/audit semantics, multiple effective dates, explicit no-goal and latest-applicable selection, saved-local-date inclusion/exclusion across UTC dates, tied-timestamp ID ordering, and checked four-nutrient Today totals.
+- Focused verification after these corrections passed strict type checking, zero-warning lint for the corrected runner, and the five selected Phase 3A Jest suites (29 tests).
+- The complete non-runtime gate then passed: route and migration verification, strict type checking, uncached zero-warning lint, the focused five-suite/29-test Phase 3A selection, and `npm run check` (20 suites, 105 tests). Public Expo configuration retained portrait orientation, `android.allowBackup: false`, disabled Predictive Back, and the configured `expo-sqlite` plugin. The offline dependency check reported dependencies up to date with its expected offline-reliability warning, and `git diff --check` passed.
+- The final Android export to `C:\tmp\calorify-phase3-final-review-export` produced one Hermes bundle from 1,315 modules. Its bundle contains no Jest, Testing Library, test/spec, `node:`, Node-only, or retired fixture markers. `expo-crypto@57.0.1` resolves correctly. The first export attempt encountered access-denied stale output in that disposable directory; removing only that disposable output and rerunning succeeded.
+- Complete tracked/untracked inspection found only the ongoing Phase 3A code, tests, documentation, Migration 002, and approved dependency changes: 21 modified tracked entries, 20 untracked entries, and no staged entries. Published Migration 001 is byte-for-byte unchanged from `HEAD`; no database, native project, credential/signing file, model, APK/AAB, or release artifact entered the repository. No Metro or emulator process had been started at that checkpoint, so the owner-assisted API 36 gate recorded below was still required.
+
+## 2026-07-16 final Phase 3A API 36 gate
+
+- The owner started the existing Pixel_8 AVD and one persistent Metro server. The first requested `--localhost` start found an existing Calorify Metro process bound only to Windows IPv6 loopback; Expo Go reported `Failed to download remote update`. That exact Calorify process was replaced by `npx expo start --go --clear --lan`. The replacement listener answered `packager-status:running` over IPv4, and the connected emulator reported Android API level 36. This was an environment binding correction, not an application change.
+- Expo Go loaded `exp://10.0.2.2:8081/--/manual-logging-verification` to the guarded development-only screen. It explicitly identified the disposable database and stated that the production database is never opened or reset. Automated interaction reached `Run all cases`, and all five approved real-SQLite scenarios reported `Passed`: `migration-001-upgrade`, `migration-002-rollback`, `meal-create-and-integrity`, `meal-transaction-rollback`, and `goal-and-today-queries`.
+- The normal project URL then cold-opened to Today. Expo Go was force-stopped without clearing data, and the normal root was reopened to Today with Today selected. The verification route was absent, and bounded logs/UI inspection showed no native error page, React Native JavaScript exception, or Android runtime crash. No app/emulator data was cleared, and no package, dependency, database, native project, credential, model, build, staging, commit, push, PR, or release action occurred.
+- Phase 3A is complete and committable. Checkpoints 3B and 3C remain separately gated and must not begin without approval.
+
+### Approved Phase 3 decisions
+
+- **Decimal policy:** user/source decimal text permits at most six fractional digits; more is rejected, never silently normalized. All authority is a non-negative safe integer at scale `1,000,000`; binary floating point is never authoritative. Persisted derived values use the integer half-up rule below. Display is calories to zero decimals and macros to exactly one decimal, including trailing zeroes.
+- **Goals:** version by `effective_local_date`. The first goal is effective today; a same-date change atomically replaces that one row; a later-date change creates a row for that date. Past-date edits and future scheduling are not available in Phase 3. A historical view selects the latest effective date no later than its saved date; no applicable row renders a defined no-goal state.
+- **Manual foods and portions:** food nutrition edits append immutable revisions and atomically move `current_revision_id`; referenced foods/revisions are restricted from deletion and history is snapshot truth. A portion edit is replacement metadata with a new ID, not an in-place update. The reviewed portion ID is validation input only; complete resolved/basis values are the durable item snapshot, so `meal_items` stores no portion foreign key.
+- **Meals and dates:** preserve meal ID and `created_at` on edit; replace all items in one exclusive transaction; require deletion confirmation and cascade child deletion. Persist UTC instant, saved local date, and offset minutes; defer timezone ID and raw text. The recommended Phase 3 query is saved-local-date equality for Today and history grouping, with UTC instant for ordering. This deliberately supersedes the earlier proposed UTC-interval query in `docs/DATABASE.md` only after owner approval: saved-date grouping preserves travel history, while it may differ from an instant-based current-location day. Captured offset is audit/display context, not a grouping recalculation input.
+- **Future transfer:** add typed export/import ports and package/version/manifest metadata only. No serialization, file access, sharing, encryption, sync, or Android storage access.
+
+### Exact proposed Migration 002 contract
+
+Migration 002 is a new immutable checksumed manifest, applied through the existing ordered ledger after published Migration 001. It creates the following tables and only the stated supporting triggers/indexes; it never changes Migration 001.
+
+In the contracts below, **positive scaled** means `INTEGER NOT NULL CHECK (typeof(column) = 'integer' AND column BETWEEN 1 AND 9007199254740991)` and **non-negative scaled** means the same expression with lower bound `0`; both use scale `1,000,000`. A required UTC audit field uses `TEXT NOT NULL CHECK (column GLOB '????-??-??T??:??:??Z' OR column GLOB '????-??-??T??:??:??.???Z')`; the TypeScript boundary also requires a real round-tripping UTC instant. A local-date field uses `TEXT NOT NULL CHECK (column GLOB '????-??-??')`, with impossible dates rejected at the TypeScript boundary. These definitions are the literal SQL pattern to substitute for the named column, not a looser shorthand.
+
+#### `meals`
+
+| Field | SQL contract |
+|---|---|
+| `id` | `TEXT PRIMARY KEY NOT NULL`, length 1-128. |
+| `category` | `TEXT NOT NULL CHECK (category IN ('breakfast','lunch','dinner','snack','other'))`. |
+| `occurred_at_utc` | Required UTC audit-field contract; domain validation rejects impossible instants. |
+| `local_date` | Required local-date-field contract; domain validation rejects impossible dates. |
+| `timezone_offset_minutes` | `INTEGER NOT NULL CHECK (typeof(timezone_offset_minutes) = 'integer' AND timezone_offset_minutes BETWEEN -720 AND 840)`. |
+| `calories_kcal_scaled`, `protein_g_scaled`, `carbohydrates_g_scaled`, `fat_g_scaled` | Required non-negative scaled contract. |
+| `created_at`, `updated_at` | Required UTC audit-field contract; create sets both, edit preserves `created_at` and replaces `updated_at`. |
+
+There is no raw meal text, note, timezone ID, source lookup, or model field in Phase 3. Indexes are `meals_local_date_occurred_at_id(local_date, occurred_at_utc DESC, id)` for Today/history and `meals_occurred_at_id(occurred_at_utc DESC, id)` for chronological keyset paging. No meal-level foreign key is needed.
+
+#### `meal_items`
+
+| Field | SQL contract |
+|---|---|
+| `id` | `TEXT PRIMARY KEY NOT NULL`, length 1-128. |
+| `meal_id` | `TEXT NOT NULL`, length 1-128, `FOREIGN KEY REFERENCES meals(id) ON DELETE CASCADE`. |
+| `position` | `INTEGER NOT NULL CHECK (typeof(position) = 'integer' AND position >= 0)`, with `UNIQUE(meal_id, position)`. |
+| `food_id`, `food_revision_id` | Both `TEXT` nullable, each null or length 1-128; `CHECK ((food_id IS NULL AND food_revision_id IS NULL) OR (food_id IS NOT NULL AND food_revision_id IS NOT NULL))`; composite `FOREIGN KEY (food_id, food_revision_id) REFERENCES food_revisions(food_id, id) ON DELETE RESTRICT`, proving revision ownership. |
+| `input_name` | `TEXT NOT NULL CHECK (length(input_name) BETWEEN 1 AND 256)`. |
+| `input_quantity_scaled` | Positive scaled contract. |
+| `input_unit` | `TEXT NOT NULL CHECK (length(input_unit) BETWEEN 1 AND 64)`; it is a canonical mass/volume/count token, `serving`, or the reviewed normalized food-portion label. |
+| `resolved_quantity_scaled`, `basis_quantity_scaled` | Positive scaled contract. |
+| `resolved_unit`, `basis_unit` | `TEXT NOT NULL CHECK (resolved_unit IN ('gram','millilitre','each','serving'))` and the identical named-column check for `basis_unit`; resolved unit is the canonical quantity used for nutrient scaling. |
+| `calories_kcal_scaled`, `protein_g_scaled`, `carbohydrates_g_scaled`, `fat_g_scaled` | Required non-negative scaled snapshot contract. |
+| `fibre_g_scaled`, `sugar_g_scaled`, `sodium_mg_scaled` | `INTEGER` nullable; when non-null, `CHECK (typeof(column) = 'integer' AND column BETWEEN 0 AND 9007199254740991)`. `NULL` means unknown, not zero. |
+| `resolution_method` | `TEXT NOT NULL CHECK (resolution_method IN ('manual','exact','alias','fts','vector','accepted_online'))`. |
+| `source_provider`, `source_record_id`, `source_dataset_version`, `source_license_id` | Nullable `TEXT CHECK (column IS NULL OR length(column) BETWEEN 1 AND 256)`; manual/source-less revisions may leave all null. |
+| `source_values_hash` | Nullable `TEXT CHECK (source_values_hash IS NULL OR (length(source_values_hash) = 64 AND source_values_hash NOT GLOB '*[^0-9a-f]*'))`. |
+| `user_modified` | `INTEGER NOT NULL CHECK (user_modified IN (0,1))`. |
+| `created_at` | `TEXT NOT NULL`, canonical UTC audit timestamp shape. |
+
+`meal_items` has no `portion_id`: resolved quantity/unit and revision basis are sufficient to explain history, while a selected portion ID is reloaded only to validate a reviewed save. `meal_items_meal_position` is the unique ordering index; no redundant single-column index is proposed. A `BEFORE UPDATE` trigger aborts direct item updates, but deletion remains allowed for the transaction's delete/reinsert meal edit and parent cascade delete. Migration 002 also adds a `BEFORE UPDATE` abort trigger to `food_portions`; a portion edit is insert-new then delete-old metadata, so a missing reviewed portion becomes a conflict rather than a silent substitution.
+
+#### `nutrition_goals`
+
+| Field | SQL contract |
+|---|---|
+| `id` | `TEXT PRIMARY KEY NOT NULL`, length 1-128. |
+| `effective_local_date` | Required local-date-field contract plus `UNIQUE`. |
+| `calories_kcal_scaled` | Positive scaled contract. |
+| `protein_g_scaled`, `carbohydrates_g_scaled`, `fat_g_scaled` | Non-negative scaled contract. |
+| `created_at`, `updated_at` | Required UTC audit-field contract. |
+
+The unique effective-date constraint makes same-date replacement an `UPDATE` of that date's existing row inside one exclusive transaction: it retains `id`/`created_at`, replaces targets, and sets `updated_at`. A later date inserts a new row. The uniqueness index serves latest-effective-date selection in descending order; no duplicate index is proposed. Current device date and no-past/no-future rules are domain validation because they depend on the trusted clock.
+
+### Exact calculation, stale-review, and transaction order
+
+1. Parse user/source decimal text directly to scaled safe integers; reject non-canonical/unsafe values and precision beyond six places.
+2. For a same-dimension unit, calculate `resolved_quantity_scaled = roundHalfUp(input_quantity_scaled * numerator / denominator)`, using the exact unit ratio (for example kilogram to gram is `1000 / 1`; milligram to gram is `1 / 1000`). For a selected food portion, calculate `roundHalfUp(input_quantity_scaled * equivalent_quantity_scaled / quantity_scaled)` and use the portion's equivalent unit. A `serving` basis only accepts its matching unit unless an explicit portion maps it to a physical dimension.
+3. Reload the reviewed `food_id`, `food_revision_id`, and optional `portion_id` inside the one exclusive transaction. The food must exist, be unarchived, and still have that exact revision as `current_revision_id`; otherwise return typed `StaleReviewConflict`. The portion must exist, belong to that food, match the reviewed identity, and be dimensionally compatible. Missing, changed, archived, incompatible, or deleted reviewed data is a typed conflict and writes nothing; the use case never silently selects a new revision/portion.
+4. For each required nutrient, calculate `roundHalfUp(revision_nutrient_scaled * resolved_quantity_scaled / basis_quantity_scaled)` once and persist that six-place item snapshot. Optional source nutrients remain null when unknown.
+5. `roundHalfUp` first rejects an unsafe multiplication (`left > floor(MAX_SAFE_INTEGER / right)`). For positive safe `product` and `divisor`, it obtains `quotient = floor(product / divisor)` and `remainder = product % divisor`; it rounds up only when `remainder >= floor(divisor / 2) + (divisor % 2)`. This ceiling-half comparison avoids calculating `2 * remainder`; increment overflow is rejected.
+6. Add persisted required item snapshots with checked addition to form meal totals, insert the meal and ordered items, re-sum the persisted rows through the same transaction handle, and commit only when the sums match. Totals are never summed from independently formatted UI values.
+7. For display only, run the same integer half-up operation on stored values: divisor `1,000,000` for whole calories and `100,000` for macro tenths. Calories render no fractional part; macros always render one, such as `5.0 g`. Sums of individually displayed items can differ slightly from a total formatted from the exact stored sum; formatting never changes authority.
+
+Meal edits use that same exclusive calculation/reload/delete/reinsert flow, preserving the meal ID and `created_at`, replacing `updated_at`/totals, and replacing the entire ordered child set. Failure injection at every child insert must prove that new saves leave no meal/items and failed edits retain the previous complete meal/items. No network, model, file, prompt, or UI interaction occurs inside the transaction.
+
+### Checkpoints, exact 3A scope, and verification route
+
+1. **3A - authorize only this checkpoint.** Add exact domain/application contracts; Migration 002/checksum; Migration 001-to-002 fixture upgrade; food, portion, meal, goal, and query repositories; transactional manual-food/meal use cases; pure/domain/repository/migration tests; and the guarded disposable route. No product UI fixture replacement beyond what the route strictly needs. Proposed files are: modify `src/core/database/migrations.ts`, `src/data/sqlite/migration-runner.ts`, `src/data/sqlite/expo-sqlite-database.ts`, `src/core/nutrition/fixed-point.ts`, their tests, `scripts/verify-migrations.cjs`, `scripts/verify-route-tree.cjs`, `tests/database-route-boundary.test.ts`, `tests/route-composition.test.ts`, and `src/app/_layout.tsx`; add `src/data/sqlite/migrations/002-manual-logging.json`, `src/core/nutrition/display-format.ts`, `src/core/nutrition/display-format.test.ts`, `src/core/time/local-date.ts`, `src/core/time/local-date.test.ts`, `src/core/domain/manual-food.ts`, `src/core/domain/manual-food.test.ts`, `src/core/domain/meal.ts`, `src/core/domain/meal.test.ts`, `src/core/domain/units.ts`, `src/core/domain/units.test.ts`, `src/core/application/manual-logging-ports.ts`, `src/core/application/manual-logging-use-cases.ts`, `src/core/application/manual-logging-use-cases.test.ts`, `src/data/sqlite/manual-food-repository.ts`, `src/data/sqlite/meal-repository.ts`, `src/data/sqlite/goal-repository.ts`, their integration tests, `tests/fixtures/sqlite/migration-001.db`, `src/app/manual-logging-verification.tsx`, and `src/features/shell/database/manual-logging-verification.tsx` with its test.
+2. **3B - separately approve after 3A review.** Replace manual-food, logging/review, meal CRUD, and goals product fixtures with accessible screens and add meal detail.
+3. **3C - separately approve after 3B review.** Replace Today/history fixtures with query-backed views, keyset paging, durable detail/progress, and final offline runtime evidence.
+
+The exact route is `/manual-logging-verification`. It is a development-only root sibling outside the production `(app)` database gate. In production it renders safe not-found before opening SQLite. It uses only literal `calorify-phase3-integration-test.db`; its reset helper rejects `calorify.db`, both declared Phase 2 database names, and all other names. It never opens, resets, migrates, or deletes `calorify.db`. Cases run serially and show only sanitized IDs/results: `migration-001-upgrade`, `migration-002-rollback`, `meal-create-and-integrity`, `meal-transaction-rollback`, and `goal-and-today-queries`. Route-boundary and route-tree checks prove this isolation.
+
+3A acceptance is: immutable Migration 002 checksum; retained version-1 fixture upgrade; failure rollback without partial schema/meal data; returned `foreign_key_check` and `quick_check(1)` validation; numeric/unit/date/stale-review/manual-food/goal/CRUD coverage; guarded route isolation; `npm run check`; and owner-run API 36 disposable-database evidence. The only approved Phase 3 dependency addition is `expo-crypto`. Static commands include `npm run check`, `npm run verify:migrations`, focused Jest suites, `npx expo config --type public`, and `npx expo export --platform android --output-dir C:\\tmp\\calorify-phase3-final-review-export`; only then may the owner-approved API 36 route procedure run.
+
+A Phase 2 binary correctly rejects unknown Migration 002, so downgrade is not rollback. Before migration exposure, incomplete UI may be disabled; after migration, preserve data and use feature-disable or compatible fix-forward/recovery only. Never reset `calorify.db`. Deferred work remains API 35/37, TalkBack, Predictive Back, physical-device performance, seed data, retrieval/inference/online lookup, actual export/import, native release, and Play work. Diagnostics may include only coarse category/schema/app-version information, never food names, meal contents, rows, or paths.
+
+The smallest next action is owner review of the complete unstaged Phase 3A diff, followed by an explicitly authorized stage/commit workflow. Do not begin Phase 3B/3C, generate native projects, push, open a pull request, publish, or release without separate approval.
 
 ## Continuation prompt
 
-Phase 2 is complete and published on `feature/phase-2-sqlite-foundation`; do not expand into Phase 3 without separate authorization. Its corrected source, static, export, and API 36 evidence are recorded above. Retain Migration 001 unchanged. Predictive Back remains deferred to Phase 9 under D-021.
+Phase 2 was merged through PR #2 at `dd3d54a`; its historical evidence above remains authoritative. Phase 3A is complete and committable on `feature/phase-3-manual-logging`: published Migration 001 remains unchanged, the five consolidated real-SQLite scenarios passed on Pixel_8 API 36, the normal Today route passed force-stop/relaunch, and the complete static/config/export gate passed. The worktree remains wholly unstaged. Do not begin Phase 3B/3C without separate approval. Predictive Back remains deferred to Phase 9 under D-021.

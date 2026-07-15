@@ -71,3 +71,42 @@ export function checkedMultiplyDivide(value: number, multiplier: number, divisor
   }
   return product / divisor;
 }
+
+function greatestCommonDivisor(left: number, right: number): number {
+  let a = left;
+  let b = right;
+  while (b !== 0) {
+    const next = a % b;
+    a = b;
+    b = next;
+  }
+  return a;
+}
+
+/** Multiplies two fixed-point factors then divides once, using safe-number cross-cancellation and half-up rounding. */
+export function checkedMultiplyDivideHalfUp(left: number, right: number, divisor: number): number {
+  assertSafeInteger(left, 'Left operand');
+  assertSafeInteger(right, 'Right operand');
+  if (!Number.isSafeInteger(divisor) || divisor <= 0 || divisor > MAX_SAFE_SCALED_VALUE) {
+    throw new FixedPointError('A positive safe-integer divisor is required.');
+  }
+  let numeratorLeft = left;
+  let numeratorRight = right;
+  let denominator = divisor;
+  const leftGcd = greatestCommonDivisor(numeratorLeft, denominator);
+  numeratorLeft /= leftGcd;
+  denominator /= leftGcd;
+  const rightGcd = greatestCommonDivisor(numeratorRight, denominator);
+  numeratorRight /= rightGcd;
+  denominator /= rightGcd;
+  if (numeratorLeft !== 0 && numeratorRight > Math.floor(MAX_SAFE_SCALED_VALUE / numeratorLeft)) {
+    throw new FixedPointError('Fixed-point multiplication would overflow after cancellation.');
+  }
+  const product = numeratorLeft * numeratorRight;
+  const quotient = Math.floor(product / denominator);
+  const remainder = product % denominator;
+  const roundUpAt = Math.floor(denominator / 2) + (denominator % 2);
+  if (remainder < roundUpAt) return quotient;
+  if (quotient >= MAX_SAFE_SCALED_VALUE) throw new FixedPointError('Fixed-point rounding would overflow.');
+  return quotient + 1;
+}

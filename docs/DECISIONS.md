@@ -370,6 +370,14 @@ Consequences: Phase 2 has exact, portable storage behavior and explicit failure 
 
 Revisit when: Phase 3 approves an input/display rounding policy, or source evidence demonstrates that a different scale is required before any production nutrition data ships.
 
+## D-023 — Phase 3 manual authority, saved-date grouping, and fix-forward
+
+Date: 2026-07-15
+
+Status: Accepted for Phase 3A
+
+Decision: Manual foods use immutable revisions; reviewed saves reload the exact current unarchived revision and portion in one exclusive transaction. Derived fixed-point values use safe-number GCD cross-cancellation and integer half-up rounding. Goals are versioned by effective local date, meals retain saved-local-date grouping, and Migration 002 rollback is feature-disable or fix-forward, never downgrade/reset.
+
 ## Unresolved decision register
 
 | Owner decision | Needed by |

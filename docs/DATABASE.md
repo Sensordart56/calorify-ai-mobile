@@ -367,7 +367,7 @@ Phase 2 fixes the storage scale at `SCALE = 1_000_000`. A single framework-indep
 - Source or user values with more than six fractional digits are rejected in Phase 2/3 until an explicitly approved rounding policy handles them. No source ingestion or meal calculation may silently truncate, use `Math.round` on an unsafe value, or rely on a SQLite value outside JavaScript-safe range.
 - Phase 3 owns user-facing calorie/macro display precision and any explicitly approved input rounding mode. It must sum exact scaled item values, test lower/upper boundaries and overflow, then derive display-only values.
 - Capture local_date at the user-confirmed meal timezone so later travel does not move historical meals to another day.
-- Query “today” using the current local calendar interval converted to UTC, while historical rows retain their saved local_date.
+- Phase 3 queries Today by equality with the device's current local calendar date and each meal's saved `local_date`; History groups by that saved date. `occurred_at_utc` orders chronologically, and the captured offset is audit/display context that never re-groups a historical meal after travel.
 
 Tests cover exact scale/unscale round trips, maximum safe stored values, rejected fractional precision, multiplication/addition overflow, SQL CHECK rejection above the safe bound, and daylight-saving date boundaries even though the initial target timezone may not use them.
 

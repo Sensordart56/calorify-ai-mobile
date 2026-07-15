@@ -1,5 +1,5 @@
 import type { DatabaseConnection } from '@/core/database/contracts';
-import { phaseTwoMigrations, type MigrationDefinition } from '@/core/database/migrations';
+import { appMigrations, type MigrationDefinition } from '@/core/database/migrations';
 import { openExpoDatabase, DISPOSABLE_INTEGRATION_DATABASE, resetDisposableDevelopmentDatabase } from '@/data/sqlite/expo-sqlite-database';
 import { initializeDatabase } from '@/data/sqlite/migration-runner';
 
@@ -21,7 +21,7 @@ function categoryFor(error: unknown): string {
 
 export async function runDisposableCase(
   id: string,
-  run: (connection: DatabaseConnection) => Promise<void>,
+  run: (connection: DatabaseConnection) => Promise<unknown>,
   dependencies: DisposableCaseDependencies = disposableCaseDependencies,
 ): Promise<VerificationResult> {
   let result: VerificationResult;
@@ -51,14 +51,14 @@ async function insertFoodWithRevision(connection: DatabaseConnection): Promise<v
   });
 }
 
-async function expectRejected(operation: () => Promise<void>, message: string): Promise<void> {
+async function expectRejected(operation: () => Promise<unknown>, message: string): Promise<void> {
   let rejected = false;
   try { await operation(); } catch { rejected = true; }
   if (!rejected) throw new Error(message);
 }
 
 export function verifyConcurrentWriteOutcome(
-  results: readonly PromiseSettledResult<void>[],
+  results: readonly PromiseSettledResult<unknown>[],
   rowIds: readonly number[],
 ): void {
   const expectedRowIds: number[] = [];
@@ -103,9 +103,9 @@ export async function runDatabaseVerification(): Promise<readonly VerificationRe
     if (!rejected) throw new Error('checksum mismatch was accepted');
   }));
   results.push(await runDisposableCase('injected-migration-rollback', async (connection) => {
-    const failing: MigrationDefinition = { version: 2, name: 'injected-failure', checksum: 'f'.repeat(64), statements: ['CREATE TABLE injected_failure (id INTEGER)', 'THIS IS INVALID SQL'] };
+    const failing: MigrationDefinition = { version: 3, name: 'injected-failure', checksum: 'f'.repeat(64), statements: ['CREATE TABLE injected_failure (id INTEGER)', 'THIS IS INVALID SQL'] };
     let rejected = false;
-    try { await initializeDatabase(connection, '1.0.0', [...phaseTwoMigrations, failing]); } catch { rejected = true; }
+    try { await initializeDatabase(connection, '1.0.0', [...appMigrations, failing]); } catch { rejected = true; }
     if (!rejected || await connection.first<{ name: string }>("SELECT name FROM sqlite_master WHERE name = 'schema_migrations'") !== null) throw new Error('failed migration was not rolled back');
   }));
   results.push(await runDisposableCase('inconsistent-user-version-ledger', async (connection) => {

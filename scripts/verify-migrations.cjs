@@ -14,7 +14,7 @@ for (const name of manifests) {
     name: manifest.name,
     statements: manifest.statements.map((statement) => statement.replace(/\r\n/g, '\n')),
   });
-  const checksum = crypto.createHash('sha256').update(Buffer.from(canonical, 'utf8')).digest('hex');
+  const checksum = crypto.createHash('sha256').update(canonical, 'utf8').digest('hex');
   if (manifest.checksum !== checksum) {
     console.error(`${name}: expected checksum ${checksum}`);
     failed = true;

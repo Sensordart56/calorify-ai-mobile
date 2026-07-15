@@ -1,6 +1,10 @@
 import * as SQLite from 'expo-sqlite';
 
-import type { DatabaseConnection, DatabaseExecutor, SqlValue } from '@/core/database/contracts';
+import type { DatabaseConnection, DatabaseExecutor, DatabaseMutationResult, SqlValue } from '@/core/database/contracts';
+
+export function createExpoExecutor(database: Pick<SQLite.SQLiteDatabase, 'execAsync' | 'runAsync' | 'getFirstAsync' | 'getAllAsync'>): DatabaseExecutor {
+  return new ExpoExecutor(database);
+}
 
 class ExpoExecutor implements DatabaseExecutor {
   public constructor(private readonly database: Pick<SQLite.SQLiteDatabase, 'execAsync' | 'runAsync' | 'getFirstAsync' | 'getAllAsync'>) {}
@@ -9,8 +13,10 @@ class ExpoExecutor implements DatabaseExecutor {
     await this.database.execAsync(sql);
   }
 
-  public async run(sql: string, params: readonly SqlValue[]): Promise<void> {
-    await this.database.runAsync(sql, [...params]);
+  public async run(sql: string, params: readonly SqlValue[]): Promise<DatabaseMutationResult> {
+    const result = await this.database.runAsync(sql, [...params]);
+    if (!Number.isSafeInteger(result.changes) || result.changes < 0) throw new Error('SQLite returned an invalid affected-row count.');
+    return { changes: result.changes };
   }
 
   public async first<Row extends object>(sql: string, params: readonly SqlValue[] = []): Promise<Row | null> {
@@ -32,7 +38,7 @@ class ExpoConnection extends ExpoExecutor implements DatabaseConnection {
     super(sqlite);
   }
 
-  public async withExclusiveTransaction(task: (transaction: DatabaseExecutor) => Promise<void>): Promise<void> {
+  public async withExclusiveTransaction<Result>(task: (transaction: DatabaseExecutor) => Promise<Result>): Promise<Result> {
     // Expo's withExclusiveTransactionAsync starts BEGIN before its callback. SQLite
     // only accepts foreign_keys changes outside a transaction, so configure the
     // dedicated public useNewConnection connection before BEGIN EXCLUSIVE instead.
@@ -46,8 +52,9 @@ class ExpoConnection extends ExpoExecutor implements DatabaseConnection {
       await transaction.execAsync(`PRAGMA busy_timeout = ${EXCLUSIVE_BUSY_TIMEOUT_MILLISECONDS}`);
       await transaction.execAsync('BEGIN EXCLUSIVE');
       try {
-        await task(new ExpoExecutor(transaction));
+        const result = await task(new ExpoExecutor(transaction));
         await transaction.execAsync('COMMIT');
+        return result;
       } catch (error) {
         await transaction.execAsync('ROLLBACK');
         throw error;
@@ -68,9 +75,10 @@ export async function openExpoDatabase(name: string): Promise<DatabaseConnection
 
 export const DISPOSABLE_INTEGRATION_DATABASE = 'calorify-phase2-integration-test.db';
 export const DISPOSABLE_RECOVERY_DATABASE = 'calorify-phase2-recovery-verification.db';
+export const DISPOSABLE_PHASE_THREE_DATABASE = 'calorify-phase3-integration-test.db';
 
 function isDeclaredDisposableDatabase(name: string): boolean {
-  return name === DISPOSABLE_INTEGRATION_DATABASE || name === DISPOSABLE_RECOVERY_DATABASE;
+  return name === DISPOSABLE_INTEGRATION_DATABASE || name === DISPOSABLE_RECOVERY_DATABASE || name === DISPOSABLE_PHASE_THREE_DATABASE;
 }
 
 export async function resetDisposableDevelopmentDatabase(name: string): Promise<void> {

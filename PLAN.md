@@ -205,6 +205,8 @@ Rollback:
 
 ## Phase 3 — Complete manual logging slice
 
+Status: Phase 3A complete and committable on 2026-07-16. The five consolidated real-SQLite scenarios, complete static/config/export gate, Pixel_8 API 36 execution, and normal Today force-stop/relaunch gate passed. Checkpoints 3B and 3C require separate approval.
+
 Deliverables:
 
 - Manual foods, compatible portion conversions, meal creation/edit/delete, goals, dashboard totals, history, and detail.
@@ -223,7 +225,7 @@ Gate:
 
 Rollback:
 
-- Manual records remain readable by the prior schema; disable only incomplete UI paths.
+- Before Migration 002 is exposed, disable only incomplete Phase 3 UI paths. Once Migration 002 has run, a Phase 2 binary correctly rejects the unknown future migration and is not a safe rollback target; preserve the database and use a compatible feature-disable or a fix-forward migration/recovery build. Never reset user data as rollback.
 
 ## Phase 4 — Licensed seed database
 

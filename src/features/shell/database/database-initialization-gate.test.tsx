@@ -12,10 +12,10 @@ jest.mock('@/data/sqlite/expo-sqlite-database', () => ({ openExpoDatabase: (...a
 function createConnection(): DatabaseConnection {
   return {
     exec: jest.fn(async () => undefined),
-    run: jest.fn(async () => undefined),
+    run: jest.fn(async () => ({ changes: 1 })),
     first: jest.fn(async () => null),
     all: jest.fn(async () => []),
-    withExclusiveTransaction: jest.fn(async () => undefined),
+    withExclusiveTransaction: async <Result,>(task: (transaction: import('@/core/database/contracts').DatabaseExecutor) => Promise<Result>): Promise<Result> => task({ exec: async () => undefined, run: async () => ({ changes: 1 }), first: async () => null, all: async () => [] }),
     close: jest.fn(async () => undefined),
   };
 }

@@ -2,7 +2,7 @@
 
 Android-first, local-first mobile port of Calorify AI, built with Expo SDK 57, React Native 0.86, Expo Router, and strict TypeScript.
 
-Phase 1 is implemented for review: the app has a fixture-only mobile shell with offline navigation. Nutrition persistence, SQLite, local inference, model downloads, and online lookup are intentionally not implemented.
+Phase 2 provides the published local SQLite foundation: forward checksummed migrations, foreign keys, fixed-point storage boundaries, and a non-destructive initialization path. Phase 3A manual-logging implementation and its five consolidated disposable scenarios passed the complete static/config/export and Pixel_8 API 36 runtime gates. Local inference, model downloads, and online lookup remain intentionally unimplemented.
 
 ## Current product contract
 

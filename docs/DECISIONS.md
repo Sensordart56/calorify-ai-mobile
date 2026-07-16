@@ -378,6 +378,16 @@ Status: Accepted for Phase 3A
 
 Decision: Manual foods use immutable revisions; reviewed saves reload the exact current unarchived revision and portion in one exclusive transaction. Derived fixed-point values use safe-number GCD cross-cancellation and integer half-up rounding. Goals are versioned by effective local date, meals retain saved-local-date grouping, and Migration 002 rollback is feature-disable or fix-forward, never downgrade/reset.
 
+## D-024 — Phase 3B product-screen composition and re-review
+
+Date: 2026-07-16
+
+Status: Accepted for Phase 3B
+
+Decision: Keep all React providers and hooks in feature/shell presentation code. One ephemeral `MealDraftProvider` sits beneath the initialized database/application provider and is shared only by Log and the single Review workflow. Routes carry only opaque food/meal IDs. Meal Detail reloads every linked food/current revision and portions before an edit enters Review; missing, archived, or incompatible portion-backed items remain flagged until removed or explicitly corrected.
+
+Consequences: Route files remain composition-only, unsaved meal drafts are intentionally lost on process death, and the save use case remains the final authority. Today and History do not become dependencies of meal creation or detail in Phase 3B.
+
 ## Unresolved decision register
 
 | Owner decision | Needed by |

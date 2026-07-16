@@ -15,12 +15,17 @@ export type RequiredTotals = Pick<Nutrients, 'caloriesKcalScaled' | 'proteinGSca
 export type StoredGoal = Readonly<{ id: string; effectiveLocalDate: string; createdAt: string; updatedAt: string; totals: RequiredTotals }>;
 export type HistoryCursor = Readonly<{ occurredAtUtc: string; id: string }>;
 export type FoodState = Readonly<{ id: string; canonicalName: string; normalizedName: string; currentRevisionId: string; archivedAt: string | null; createdAt: string; updatedAt: string }>;
+export type FoodListItem = Readonly<{ id: string; canonicalName: string; normalizedName: string; currentRevisionId: string; archivedAt: string | null; basisQuantityScaled: number; basisUnit: FoodRevision['basisUnit']; caloriesKcalScaled: number }>;
+export type FoodWithCurrentRevision = Readonly<{ state: FoodState; revision: FoodRevision }>;
 export type MealHeader = Readonly<{ id: string; category: MealCategory; occurredAtUtc: string; localDate: string; timezoneOffsetMinutes: number; createdAt: string; updatedAt: string; totals: RequiredTotals }>;
 export type MealItemSnapshot = Readonly<{ id: string; mealId: string; position: number; foodId: string | null; foodRevisionId: string | null; inputName: string; inputQuantityScaled: number; inputUnit: string; resolvedQuantityScaled: number; resolvedUnit: FoodRevision['basisUnit']; basisQuantityScaled: number; basisUnit: FoodRevision['basisUnit']; nutrients: Nutrients; resolutionMethod: ResolutionMethod; source: FoodRevision['source']; userModified: boolean; createdAt: string }>;
 export type MealDetail = Readonly<{ header: MealHeader; items: readonly MealItemSnapshot[] }>;
 export type TodaySummary = Readonly<{ meals: readonly MealHeader[]; totals: RequiredTotals }>;
 export type HistoryPage = Readonly<{ meals: readonly MealHeader[]; nextCursor: HistoryCursor | null }>;
 export interface ManualLoggingQuery {
+  listFoods(transaction: DatabaseExecutor, normalizedQuery: string, limit: number): Promise<readonly FoodListItem[]>;
+  loadFoodWithCurrentRevision(transaction: DatabaseExecutor, foodId: string): Promise<FoodWithCurrentRevision | null>;
+  listPortions(transaction: DatabaseExecutor, foodId: string): Promise<readonly FoodPortion[]>;
   findGoal(transaction: DatabaseExecutor, date: string): Promise<StoredGoal | null>;
   findApplicableGoal(transaction: DatabaseExecutor, date: string): Promise<StoredGoal | null>;
   loadMealHeader(transaction: DatabaseExecutor, mealId: string): Promise<MealHeader | null>;

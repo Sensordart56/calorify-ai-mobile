@@ -1,30 +1,35 @@
-import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useFocusEffect, useRouter, type Href } from 'expo-router';
+import { useCallback, useState } from 'react';
 
 import { ThemedText } from '@/components/themed-text';
-import { foodLibraryFixtures } from '@/features/shell/fixtures/demo-content';
-import { appPaths } from '@/core/navigation/secondary-screens';
+import type { FoodListItem } from '@/core/application/manual-logging-ports';
+import { formatCalories } from '@/core/nutrition/display-format';
+import { useManualLogging } from '@/features/shell/manual-logging/manual-logging-provider';
 import { ActionButton } from '@/shared/ui/action-button';
 import { Card } from '@/shared/ui/card';
-import { EmptyState } from '@/shared/ui/state-panels';
 import { FormField } from '@/shared/ui/form-field';
+import { ListRow } from '@/shared/ui/list-row';
 import { Screen } from '@/shared/ui/screen';
 import { SectionHeading } from '@/shared/ui/section-heading';
-import { StatusBadge } from '@/shared/ui/status-badge';
+import { EmptyState, ErrorState, LoadingState } from '@/shared/ui/state-panels';
 
 export function FoodLibraryScreen() {
   const router = useRouter();
+  const logging = useManualLogging();
   const [query, setQuery] = useState('');
-  const matches = useMemo(() => foodLibraryFixtures.filter(({ name }) => name.toLowerCase().includes(query.trim().toLowerCase())), [query]);
+  const [foods, setFoods] = useState<readonly FoodListItem[]>([]);
+  const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const load = () => { setState('loading'); void logging.foods(query, 50).then((result) => { setFoods(result); setState('ready'); }).catch(() => setState('error')); };
+  useFocusEffect(useCallback(() => { let active = true; setState('loading'); void logging.foods(query, 50).then((result) => { if (active) { setFoods(result); setState('ready'); } }).catch(() => { if (active) setState('error'); }); return () => { active = false; }; }, [logging, query]));
   return (
-    <Screen title="Food Library" description="Future local foods, sources, and portions.">
-      <StatusBadge label="Fixture foods only" />
-      <FormField label="Search fixture foods" onChangeText={setQuery} placeholder="Search by food name" value={query} />
-      {matches.length === 0 ? <EmptyState title="No fixture foods found" body="Search is presentation-only. The local food library arrives in a later phase." /> : (
-        <Card><SectionHeading>Fixture foods</SectionHeading>{matches.map((food) => <ThemedText key={food.name}>{food.name}<ThemedText themeColor="textSecondary" type="small"> — {food.detail}</ThemedText></ThemedText>)}</Card>
-      )}
-      <Card><SectionHeading>Provenance</SectionHeading><ThemedText themeColor="textSecondary">Source, license, and row-level provenance are placeholders. No food data ships in this shell.</ThemedText></Card>
-      <ActionButton label="Add food manually" onPress={() => router.push(appPaths.manualEntry)} />
+    <Screen title="Food Library" description="Browse locally saved foods. Search uses literal name matching.">
+      <FormField label="Search foods" onChangeText={(value) => { setState('loading'); setQuery(value); }} placeholder="Search by food name" value={query} />
+      {state === 'loading' ? <LoadingState title="Loading foods" body="Reading local foods." /> : null}
+      {state === 'error' ? <><ErrorState title="Food Library unavailable" body="Try again. Your local foods were not changed." /><ActionButton label="Retry food library" onPress={load} variant="secondary" /></> : null}
+      {state === 'ready' && foods.length === 0 ? <EmptyState title="No foods found" body="Create a manual food to start your local library." /> : null}
+      {state === 'ready' && foods.length > 0 ? <Card><SectionHeading>Foods</SectionHeading>{foods.map((food) => <ListRow key={food.id} title={food.canonicalName} detail={`${formatCalories(food.caloriesKcalScaled)} calories per basis${food.archivedAt === null ? '' : ' · archived'}`} accessibilityLabel={`View ${food.canonicalName}${food.archivedAt === null ? '' : ', archived'}`} onPress={() => router.push(`/food-detail?foodId=${encodeURIComponent(food.id)}` as Href)} />)}</Card> : null}
+      <ActionButton label="Add food manually" onPress={() => router.push('/manual-entry')} />
+      <ThemedText type="small" themeColor="textSecondary">Archived foods stay visible but cannot be selected for a new meal until restored.</ThemedText>
     </Screen>
   );
 }

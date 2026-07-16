@@ -205,7 +205,7 @@ Rollback:
 
 ## Phase 3 — Complete manual logging slice
 
-Status: Phase 3A complete and committable on 2026-07-16. The five consolidated real-SQLite scenarios, complete static/config/export gate, Pixel_8 API 36 execution, and normal Today force-stop/relaunch gate passed. Checkpoints 3B and 3C require separate approval.
+Status: Phase 3A and Phase 3B complete on 2026-07-16. Database-backed manual-food, meal, portion, and goal screens passed the Pixel_8/API 36 product, dark-mode, 1.3x font-scale, offline save/detail/goal, stale-review, and force-stop/relaunch gates. Today and History remain fixtures for the separately gated Phase 3C checkpoint.
 
 Deliverables:
 

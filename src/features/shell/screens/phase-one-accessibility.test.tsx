@@ -14,8 +14,14 @@ import { productCopy } from '@/shared/copy/product-copy';
 import { EmptyState, ErrorState, LoadingState } from '@/shared/ui/state-panels';
 
 const mockPush = jest.fn();
+const mockManualLogging = { foods: async () => [], applicableGoal: async () => null };
+const mockMealDraft = { draft: null, beginCreate: jest.fn(), beginEdit: jest.fn(), addFood: jest.fn(), updateItem: jest.fn(), removeItem: jest.fn(), setCategory: jest.fn(), clear: jest.fn() };
 
-jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }));
+jest.mock('expo-router', () => ({ useFocusEffect: (effect: () => void | (() => void)) => jest.requireActual('react').useEffect(effect, [effect]), useRouter: () => ({ push: mockPush }) }));
+jest.mock('@/features/shell/manual-logging/manual-logging-provider', () => ({
+  useManualLogging: () => mockManualLogging,
+  useMealDraft: () => mockMealDraft,
+}));
 
 describe('Phase 1 presentation screens', () => {
   beforeEach(() => {
@@ -24,7 +30,7 @@ describe('Phase 1 presentation screens', () => {
 
   test.each([
     ['Today', TodayScreen], ['Log', LogScreen], ['History', HistoryScreen], ['Settings', SettingsScreen],
-    ['Review meal', ReviewScreen], ['Manual entry', ManualEntryScreen], ['Goals', GoalsScreen],
+    ['Review meal', ReviewScreen], ['Manual food', ManualEntryScreen], ['Goals', GoalsScreen],
     ['Food Library', FoodLibraryScreen], ['Models', ModelsScreen], ['About and Data Sources', AboutDataSourcesScreen],
   ])('exposes an accessible heading for %s', async (heading, Component) => {
     const view = await render(<Component />);
@@ -41,12 +47,10 @@ describe('Phase 1 presentation screens', () => {
     expect(mockPush).toHaveBeenLastCalledWith('/manual-entry');
   });
 
-  test('navigates from Log to Manual entry and Review', async () => {
+  test('navigates from Log to manual food creation', async () => {
     const view = await render(<LogScreen />);
-    await fireEvent.press(view.getByRole('button', { name: 'Enter food manually' }));
+    await fireEvent.press(view.getByRole('button', { name: 'Create a manual food' }));
     expect(mockPush).toHaveBeenLastCalledWith('/manual-entry');
-    await fireEvent.press(view.getByRole('button', { name: 'Continue to fixture review' }));
-    expect(mockPush).toHaveBeenLastCalledWith('/review');
   });
 
   test('navigates from Settings to every secondary destination', async () => {

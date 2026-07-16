@@ -2,14 +2,14 @@
 
 Android-first, local-first mobile port of Calorify AI, built with Expo SDK 57, React Native 0.86, Expo Router, and strict TypeScript.
 
-Phase 2 provides the published local SQLite foundation: forward checksummed migrations, foreign keys, fixed-point storage boundaries, and a non-destructive initialization path. Phase 3A manual-logging implementation and its five consolidated disposable scenarios passed the complete static/config/export and Pixel_8 API 36 runtime gates. Local inference, model downloads, and online lookup remain intentionally unimplemented.
+Phase 2 provides the published local SQLite foundation: forward checksummed migrations, foreign keys, fixed-point storage boundaries, and a non-destructive initialization path. Phase 3A passed its disposable SQLite and API 36 gates. Phase 3B now provides database-backed manual food, food library/detail, meal review/detail, and goals screens; its owner-assisted API 36 product-screen verification remains pending. Local inference, model downloads, and online lookup remain intentionally unimplemented.
 
 ## Current product contract
 
 - Manual nutrition logging remains useful without a network, account, backend, or model.
 - A future local model may extract only food names, quantities, and units.
 - Nutrition comes from local database records, explicit manual entry, or a sourced online result accepted by the user.
-- Meal persistence will be transactional and preserve historical snapshots.
+- Meals are re-resolved and saved transactionally with immutable historical snapshots.
 
 ## Quality checks
 
@@ -38,7 +38,8 @@ Do not use that command unless the current phase explicitly calls for emulator v
 ## Current shell
 
 - Stable Expo Router JavaScript tabs: Today, Log, History, and Settings.
-- Fixture-only routes: Review meal, Manual entry, Goals, Food Library, Models, and About and Data Sources.
+- Database-backed routes: Manual food, Food Library, Food Detail, Review meal, Meal Detail, and Goals.
+- Today and History intentionally remain Phase 3C fixtures. Models and About and Data Sources remain fixture/informational routes.
 - Feature screens live under src/features; route files only compose those screens.
 - Framework-independent contracts live under src/core.
 - Shared presentation primitives live under src/shared.

@@ -3,7 +3,7 @@ import type { FoodPortion, FoodRevision, MealCategory, ResolutionMethod } from '
 import { requireLocalDate } from '@/core/time/local-date';
 import { requireUtcTimestamp } from '@/core/time/utc-timestamp';
 import { checkedAdd } from '@/core/nutrition/fixed-point';
-import type { FoodState, HistoryCursor, HistoryPage, ManualLoggingQuery, ManualLoggingRepository, ManualLoggingWriter, MealDetail, MealHeader, MealItemSnapshot, MealCommand, PersistedItem, RequiredTotals, StoredGoal, TodaySummary } from '@/core/application/manual-logging-ports';
+import type { FoodListItem, FoodState, FoodWithCurrentRevision, HistoryCursor, HistoryPage, ManualLoggingQuery, ManualLoggingRepository, ManualLoggingWriter, MealDetail, MealHeader, MealItemSnapshot, MealCommand, PersistedItem, RequiredTotals, StoredGoal, TodaySummary } from '@/core/application/manual-logging-ports';
 
 type RevisionRow = Readonly<{ id: string; food_id: string; revision_number: number; basis_quantity_scaled: number; basis_unit: FoodRevision['basisUnit']; calories_kcal_scaled: number; protein_g_scaled: number; carbohydrates_g_scaled: number; fat_g_scaled: number; fibre_g_scaled: number | null; sugar_g_scaled: number | null; sodium_mg_scaled: number | null; user_modified: number; provider: string | null; provider_record_id: string | null; dataset_version: string | null; license_id: string | null; payload_hash: string | null }>;
 
@@ -27,6 +27,25 @@ function mapRevision(row: RevisionRow): FoodRevision { return { id: text(row.id,
 function mapHeader(row: Readonly<Record<string, unknown>>): MealHeader { const offset = integer(row.timezone_offset_minutes, 'Timezone offset', -720); if (offset > 840) throw new RepositoryIntegrityError('Timezone offset is invalid.'); return { id: text(row.id, 'Meal ID', 128), category: oneOf(row.category, categories, 'Meal category') as MealCategory, occurredAtUtc: utc(row.occurred_at_utc, 'Meal UTC timestamp'), localDate: localDate(row.local_date, 'Meal local date'), timezoneOffsetMinutes: offset, createdAt: utc(row.created_at, 'Meal created timestamp'), updatedAt: utc(row.updated_at, 'Meal updated timestamp'), totals: totals(row) }; }
 
 export class SqliteManualLoggingRepository implements ManualLoggingRepository, ManualLoggingWriter, ManualLoggingQuery {
+  public async listFoods(transaction: DatabaseExecutor, normalizedQuery: string, limit: number): Promise<readonly FoodListItem[]> {
+    if (typeof normalizedQuery !== 'string' || normalizedQuery.length > 256 || !Number.isSafeInteger(limit) || limit < 1 || limit > 50) throw new RepositoryIntegrityError('Food search is invalid.');
+    const query = normalizedQuery.length === 0
+      ? 'SELECT f.id, f.canonical_name, f.normalized_name, f.current_revision_id, f.archived_at, r.basis_quantity_scaled, r.basis_unit, r.calories_kcal_scaled FROM foods f JOIN food_revisions r ON r.food_id = f.id AND r.id = f.current_revision_id ORDER BY f.normalized_name ASC, f.id ASC LIMIT ?'
+      : 'SELECT f.id, f.canonical_name, f.normalized_name, f.current_revision_id, f.archived_at, r.basis_quantity_scaled, r.basis_unit, r.calories_kcal_scaled FROM foods f JOIN food_revisions r ON r.food_id = f.id AND r.id = f.current_revision_id WHERE instr(f.normalized_name, ?) > 0 ORDER BY f.normalized_name ASC, f.id ASC LIMIT ?';
+    const rows = await transaction.all<Readonly<Record<string, unknown>>>(query, normalizedQuery.length === 0 ? [limit] : [normalizedQuery, limit]);
+    return rows.map((row) => ({ id: text(row.id, 'Food ID', 128), canonicalName: text(row.canonical_name, 'Food name'), normalizedName: text(row.normalized_name, 'Normalized food name'), currentRevisionId: text(row.current_revision_id, 'Current revision ID', 128), archivedAt: row.archived_at === null ? null : utc(row.archived_at, 'Archived timestamp'), basisQuantityScaled: integer(row.basis_quantity_scaled, 'Basis quantity', 1), basisUnit: oneOf(row.basis_unit, units, 'Basis unit'), caloriesKcalScaled: integer(row.calories_kcal_scaled, 'Calories') }));
+  }
+  public async loadFoodWithCurrentRevision(transaction: DatabaseExecutor, foodId: string): Promise<FoodWithCurrentRevision | null> {
+    const state = await this.loadFoodState(transaction, foodId);
+    if (state === null) return null;
+    const row = await transaction.first<RevisionRow>('SELECT r.id, r.food_id, r.revision_number, r.basis_quantity_scaled, r.basis_unit, r.calories_kcal_scaled, r.protein_g_scaled, r.carbohydrates_g_scaled, r.fat_g_scaled, r.fibre_g_scaled, r.sugar_g_scaled, r.sodium_mg_scaled, r.user_modified, s.provider, s.provider_record_id, s.dataset_version, s.license_id, s.payload_hash FROM food_revisions r LEFT JOIN food_sources s ON s.id = r.source_id WHERE r.food_id = ? AND r.id = ?', [foodId, state.currentRevisionId]);
+    if (row === null) throw new RepositoryIntegrityError('Food current revision is missing.');
+    return { state, revision: mapRevision(row) };
+  }
+  public async listPortions(transaction: DatabaseExecutor, foodId: string): Promise<readonly FoodPortion[]> {
+    const rows = await transaction.all<Readonly<{ id: string; food_id: string; label: string; normalized_label: string; quantity_scaled: number; equivalent_quantity_scaled: number; equivalent_unit: FoodPortion['equivalentUnit'] }>>('SELECT id, food_id, label, normalized_label, quantity_scaled, equivalent_quantity_scaled, equivalent_unit FROM food_portions WHERE food_id = ? ORDER BY normalized_label ASC, id ASC', [foodId]);
+    return rows.map((row) => ({ id: text(row.id, 'Portion ID', 128), foodId: text(row.food_id, 'Food ID', 128), label: text(row.label, 'Portion label'), normalizedLabel: text(row.normalized_label, 'Normalized portion label'), quantityScaled: integer(row.quantity_scaled, 'Portion quantity', 1), equivalentQuantityScaled: integer(row.equivalent_quantity_scaled, 'Equivalent quantity', 1), equivalentUnit: oneOf(row.equivalent_unit, ['gram', 'millilitre', 'each'] as const, 'Equivalent unit') }));
+  }
   public async loadCurrentRevision(transaction: DatabaseExecutor, foodId: string, revisionId: string): Promise<FoodRevision | null> {
     const row = await transaction.first<RevisionRow>("SELECT r.id, r.food_id, r.revision_number, r.basis_quantity_scaled, r.basis_unit, r.calories_kcal_scaled, r.protein_g_scaled, r.carbohydrates_g_scaled, r.fat_g_scaled, r.fibre_g_scaled, r.sugar_g_scaled, r.sodium_mg_scaled, r.user_modified, s.provider, s.provider_record_id, s.dataset_version, s.license_id, s.payload_hash FROM foods f JOIN food_revisions r ON r.food_id = f.id AND r.id = f.current_revision_id LEFT JOIN food_sources s ON s.id = r.source_id WHERE f.id = ? AND r.id = ? AND f.archived_at IS NULL", [foodId, revisionId]);
     if (row === null) return null;

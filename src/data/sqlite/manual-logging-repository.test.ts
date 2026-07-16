@@ -47,6 +47,24 @@ describe('manual logging SQLite repository', () => {
     expect(executor.calls.at(-1)?.sql).toContain('effective_local_date <= ?');
   });
 
+  test('uses bounded literal food search, deterministic ordering, and maps archived rows', async () => {
+    executor.allValue = [{ id: 'food-1', canonical_name: 'Rice_100%', normalized_name: 'rice_100%', current_revision_id: 'revision-1', archived_at: '2026-07-15T12:00:00.000Z', basis_quantity_scaled: 100, basis_unit: 'gram', calories_kcal_scaled: 1 }];
+    await expect(repository.listFoods(executor, 'rice_100%', 10)).resolves.toMatchObject([{ archivedAt: '2026-07-15T12:00:00.000Z', basisUnit: 'gram' }]);
+    expect(executor.calls[0]?.sql).toContain('instr(f.normalized_name, ?) > 0 ORDER BY f.normalized_name ASC, f.id ASC LIMIT ?');
+    expect(executor.calls[0]?.params).toEqual(['rice_100%', 10]);
+    await expect(repository.listFoods(executor, '%', 51)).rejects.toBeInstanceOf(RepositoryIntegrityError);
+  });
+
+  test('loads archived food with its current revision and lists portions deterministically', async () => {
+    executor.firstValue = { id: 'food-1', canonical_name: 'Rice', normalized_name: 'rice', current_revision_id: 'revision-1', archived_at: '2026-07-15T12:00:00.000Z', created_at: '2026-07-15T12:00:00.000Z', updated_at: '2026-07-15T12:00:00.000Z' };
+    const originalFirst = executor.first.bind(executor); let count = 0;
+    executor.first = async <Row extends object>(sql: string, params: readonly SqlValue[] = []): Promise<Row | null> => { count += 1; if (count === 2) return { id: 'revision-1', food_id: 'food-1', revision_number: 1, basis_quantity_scaled: 100, basis_unit: 'gram', calories_kcal_scaled: 1, protein_g_scaled: 2, carbohydrates_g_scaled: 3, fat_g_scaled: 4, fibre_g_scaled: null, sugar_g_scaled: null, sodium_mg_scaled: null, user_modified: 1, provider: null, provider_record_id: null, dataset_version: null, license_id: null, payload_hash: null } as Row; return originalFirst(sql, params); };
+    await expect(repository.loadFoodWithCurrentRevision(executor, 'food-1')).resolves.toMatchObject({ state: { archivedAt: '2026-07-15T12:00:00.000Z' }, revision: { id: 'revision-1' } });
+    executor.allValue = [{ id: 'portion-2', food_id: 'food-1', label: 'Cup', normalized_label: 'cup', quantity_scaled: 1, equivalent_quantity_scaled: 240, equivalent_unit: 'millilitre' }];
+    await repository.listPortions(executor, 'food-1');
+    expect(executor.calls.at(-1)?.sql).toContain('ORDER BY normalized_label ASC, id ASC');
+  });
+
   test('propagates mutation counts and binds the full meal insert', async () => {
     executor.mutation = { changes: 0 };
     const result = await repository.insertMeal(executor, { id: 'meal-1', command: { category: 'lunch', occurredAtUtc: '2026-07-15T12:00:00.000Z', localDate: '2026-07-15', timezoneOffsetMinutes: 330, items: [] }, totals: { caloriesKcalScaled: 1, proteinGScaled: 2, carbohydratesGScaled: 3, fatGScaled: 4 }, now: '2026-07-15T12:00:00.000Z' });

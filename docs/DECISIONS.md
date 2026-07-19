@@ -376,7 +376,7 @@ Date: 2026-07-15
 
 Status: Accepted for Phase 3A
 
-Decision: Manual foods use immutable revisions; reviewed saves reload the exact current unarchived revision and portion in one exclusive transaction. Derived fixed-point values use safe-number GCD cross-cancellation and integer half-up rounding. Goals are versioned by effective local date, meals retain saved-local-date grouping, and Migration 002 rollback is feature-disable or fix-forward, never downgrade/reset.
+Decision: Manual foods use immutable revisions; reviewed saves reload the exact current unarchived revision and portion in one exclusive transaction. Inputs must be safe scaled integers; derived and display arithmetic uses safe-number integer half-up rounding. Presentation uses whole calories and one-decimal macros and never becomes authoritative. Goals are versioned by effective local date, same-date saves replace that date's goal, and queries select the latest applicable effective date. Meals retain saved-local-date grouping, and Migration 002 rollback is feature-disable or fix-forward, never downgrade/reset.
 
 ## D-024 — Phase 3B product-screen composition and re-review
 
@@ -388,14 +388,22 @@ Decision: Keep all React providers and hooks in feature/shell presentation code.
 
 Consequences: Route files remain composition-only, unsaved meal drafts are intentionally lost on process death, and the save use case remains the final authority. Today and History do not become dependencies of meal creation or detail in Phase 3B.
 
+## D-025 — Phase 3C saved-date paging, progress, and refresh
+
+Date: 2026-07-19
+
+Status: Accepted for Phase 3C
+
+Decision: Today obtains the current local date through the application clock, reads exact saved meal totals plus the latest applicable effective goal, and derives display-only goal progress with checked safe-integer half-up arithmetic. A zero nutrient target is “No target set” and is never divided. Positive progress is capped visually at 100 while raw values distinguish met from exceeded. History orders and keyset-pages by saved `local_date DESC`, `occurred_at_utc DESC`, and opaque `id ASC`; its cursor contains all three fields. Today and History replace page-one data on explicit refresh or route refocus, retain successful data on refresh/page errors, and deduplicate History append results by meal ID.
+
+Consequences: Travel never re-groups persisted history, tied timestamps remain deterministic, page boundaries can merge one saved-date section, and concurrent rows ordered ahead of the active cursor appear on refresh rather than being injected into the current paging session. Routes continue to carry only opaque IDs, and no migration or dependency is required.
+
 ## Unresolved decision register
 
 | Owner decision | Needed by |
 |---|---|
 | Permanent store name, Android application ID authorization, brand/store owner | Before store configuration |
 | Local-model RAM/storage/chipset/device tiers | Phase 6 |
-| User-facing decimal display and ingress rounding policy | Phase 3 |
-| Historical goal versions versus current-goal-only semantics | Phase 3 |
 | Licensed seed sources, IFCT permission/exclusion, provenance owner | Phase 4 |
 | Retrieval metrics and auto-selection thresholds | Phase 5 |
 | Model acceptance thresholds and physical test phones | Phase 6 |

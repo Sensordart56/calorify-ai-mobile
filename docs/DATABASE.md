@@ -303,8 +303,8 @@ Create only indexes justified by actual reads and verify query plans:
 | food_revisions(food_id, id) unique | Composite current-revision foreign-key parent key |
 | food_sources(provider, provider_record_id, dataset_version) | Provenance deduplication |
 | food_portions(food_id, normalized_label) | Unit/portion resolution |
-| meals(local_date, occurred_at_utc desc) | Dashboard and daily history |
-| meals(occurred_at_utc desc, id) | Keyset pagination |
+| meals(local_date, occurred_at_utc desc, id) | Today and saved-date-first History reads |
+| meals(occurred_at_utc desc, id) | Retained chronological query support |
 | meal_items(meal_id, position) unique | Ordered detail and item aggregation |
 | nutrition_goals(effective_local_date desc) | Applicable target lookup |
 | installed_models(active) partial/unique policy | Single active verified model |
@@ -312,7 +312,7 @@ Create only indexes justified by actual reads and verify query plans:
 | online_lookup_cache(expires_at) | Bounded expiry cleanup |
 | foods_fts virtual index | Full-text candidates |
 
-Avoid offset pagination for large history; use occurred_at_utc plus stable ID keyset cursors. Search/history queries are tested with EXPLAIN QUERY PLAN fixtures as data volume grows.
+Avoid offset pagination for History. Phase 3C orders by saved `local_date DESC`, then `occurred_at_utc DESC`, then stable `id ASC`, and uses all three fields in the matching keyset cursor. This keeps captured-date groups contiguous, makes tied timestamps deterministic, and prevents page-boundary skips. Search/history query plans are tested with volume fixtures as data grows; Migration 002 remains immutable and requires no Phase 3C schema change.
 
 ## Migration protocol
 

@@ -2,7 +2,7 @@
 
 Android-first, local-first mobile port of Calorify AI, built with Expo SDK 57, React Native 0.86, Expo Router, and strict TypeScript.
 
-Phase 2 provides the published local SQLite foundation: forward checksummed migrations, foreign keys, fixed-point storage boundaries, and a non-destructive initialization path. Phase 3A passed its disposable SQLite and API 36 gates. Phase 3B now provides database-backed manual food, food library/detail, meal review/detail, and goals screens; its owner-assisted API 36 product-screen verification remains pending. Local inference, model downloads, and online lookup remain intentionally unimplemented.
+Phase 2 provides the published local SQLite foundation: forward checksummed migrations, foreign keys, fixed-point storage boundaries, and a non-destructive initialization path. Phase 3 is complete: its disposable SQLite and Pixel_8/API 36 gates cover the manual product plus SQLite-backed Today totals/goals/meals and saved-date-grouped keyset History, including online/offline mutations, pagination, lifecycle, and representative accessibility/layout behavior. Local inference, model downloads, and online lookup remain intentionally unimplemented.
 
 ## Current product contract
 
@@ -38,8 +38,8 @@ Do not use that command unless the current phase explicitly calls for emulator v
 ## Current shell
 
 - Stable Expo Router JavaScript tabs: Today, Log, History, and Settings.
-- Database-backed routes: Manual food, Food Library, Food Detail, Review meal, Meal Detail, and Goals.
-- Today and History intentionally remain Phase 3C fixtures. Models and About and Data Sources remain fixture/informational routes.
+- Database-backed product: Today, History, Manual food, Food Library, Food Detail, Review meal, Meal Detail, and Goals.
+- Models and About and Data Sources remain fixture/informational routes for their owning later phases.
 - Feature screens live under src/features; route files only compose those screens.
 - Framework-independent contracts live under src/core.
 - Shared presentation primitives live under src/shared.

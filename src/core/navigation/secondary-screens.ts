@@ -32,4 +32,5 @@ export const appPaths = {
   foodLibrary: '/food-library' as Href,
   models: '/models' as Href,
   aboutDataSources: '/about-data-sources' as Href,
+  mealDetail: (mealId: string) => ({ pathname: '/meal-detail', params: { mealId } }) as Href,
 } as const;

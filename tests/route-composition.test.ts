@@ -21,4 +21,11 @@ describe('route composition', () => {
       expect(source).toMatch(/^import .*;\r?\n\r?\nexport default [A-Za-z]+;$/);
     }
   });
+
+  test('keeps Meal Detail routing to one opaque string ID', () => {
+    const source = readFileSync(join(process.cwd(), 'src', 'app', '(app)', 'meal-detail.tsx'), 'utf8');
+    expect(source).toContain("useLocalSearchParams<{ mealId?: string }>()");
+    expect(source).toContain("<MealDetailScreen mealId={typeof mealId === 'string' ? mealId : ''} />");
+    expect(source).not.toMatch(/SQLite|Repository|nutrition|meal_items|JSON\.parse/);
+  });
 });

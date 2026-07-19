@@ -10,11 +10,15 @@ import { ReviewScreen } from '@/features/logging/screens/review-screen';
 import { AboutDataSourcesScreen } from '@/features/settings/screens/about-data-sources-screen';
 import { ModelsScreen } from '@/features/settings/screens/models-screen';
 import { SettingsScreen } from '@/features/settings/screens/settings-screen';
-import { productCopy } from '@/shared/copy/product-copy';
 import { EmptyState, ErrorState, LoadingState } from '@/shared/ui/state-panels';
 
 const mockPush = jest.fn();
-const mockManualLogging = { foods: async () => [], applicableGoal: async () => null };
+const mockManualLogging = {
+  foods: async () => [],
+  applicableGoal: async () => null,
+  todayDashboard: async () => ({ localDate: '2026-07-19', summary: { meals: [], totals: { caloriesKcalScaled: 0, proteinGScaled: 0, carbohydratesGScaled: 0, fatGScaled: 0 } }, goal: null }),
+  history: async () => ({ meals: [], nextCursor: null }),
+};
 const mockMealDraft = { draft: null, beginCreate: jest.fn(), beginEdit: jest.fn(), addFood: jest.fn(), updateItem: jest.fn(), removeItem: jest.fn(), setCategory: jest.fn(), clear: jest.fn() };
 
 jest.mock('expo-router', () => ({ useFocusEffect: (effect: () => void | (() => void)) => jest.requireActual('react').useEffect(effect, [effect]), useRouter: () => ({ push: mockPush }) }));
@@ -67,9 +71,10 @@ describe('Phase 1 presentation screens', () => {
     }
   });
 
-  test('labels fixture nutrition as non-authoritative', async () => {
+  test('labels persisted Today empty states without fixture nutrition', async () => {
     const view = await render(<TodayScreen />);
-    expect(view.getByText(productCopy.fixtureNotice)).toBeOnTheScreen();
+    expect(await view.findByLabelText('No meals saved today. Log a meal manually when you are ready.')).toBeOnTheScreen();
+    expect(view.queryByText(/fixture/i)).not.toBeOnTheScreen();
   });
 
   test('gives empty, loading, and error states accessible summaries', async () => {

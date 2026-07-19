@@ -2,7 +2,7 @@ import type { DatabaseConnection, DatabaseExecutor } from '@/core/database/contr
 import type { Clock, IdGenerator } from './runtime-ports';
 import type { CanonicalUnit, FoodPortion, FoodRevision, MealCategory, Nutrients, ResolutionMethod } from '@/core/domain/manual-logging';
 import { ManualLoggingError, StaleReviewConflict, calculateItemNutrients, resolveQuantity, sumRequiredNutrients } from '@/core/domain/manual-logging';
-import type { FoodListItem, FoodWithCurrentRevision, HistoryCursor, HistoryPage, ManualLoggingRepository, ManualLoggingWriter, MealCommand, MealDetail, PersistedItem, RequiredTotals, ReviewedItem, StoredGoal, TodaySummary } from './manual-logging-ports';
+import type { FoodListItem, FoodWithCurrentRevision, HistoryCursor, HistoryPage, ManualLoggingRepository, ManualLoggingWriter, MealCommand, MealDetail, PersistedItem, RequiredTotals, ReviewedItem, StoredGoal, TodayDashboard, TodaySummary } from './manual-logging-ports';
 import { requireUtcTimestamp } from '@/core/time/utc-timestamp';
 import { requireLocalDate } from '@/core/time/local-date';
 import { MAX_SAFE_SCALED_VALUE } from '@/core/nutrition/fixed-point';
@@ -83,5 +83,6 @@ export class ManualLoggingUseCases {
   public async portions(foodId: string): Promise<readonly FoodPortion[]> { requiredId(foodId, 'Food ID'); return this.reader.listPortions(this.database, foodId); }
   public async mealDetail(mealId: string): Promise<MealDetail> { requiredId(mealId, 'Meal ID'); const detail = await this.reader.loadMealDetail(this.database, mealId); if (detail === null) throw new NotFoundError('Meal was not found.'); return detail; }
   public async today(localDate: string): Promise<TodaySummary> { try { requireLocalDate(localDate); } catch { throw new ValidationError('Today local date is invalid.'); } return this.reader.listToday(this.database, localDate); }
-  public async history(limit: number, cursor: HistoryCursor | null): Promise<HistoryPage> { if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100) throw new ValidationError('History limit is invalid.'); if (cursor !== null) { try { requireUtcTimestamp(cursor.occurredAtUtc); } catch { throw new ValidationError('History cursor is invalid.'); } requiredId(cursor.id, 'History cursor ID'); } return this.reader.listHistory(this.database, limit, cursor); }
+  public async todayDashboard(): Promise<TodayDashboard> { let localDate: string; try { localDate = requireLocalDate(this.clock.localDate()); } catch { throw new ValidationError('Clock local date is invalid.'); } const [summary, goal] = await Promise.all([this.reader.listToday(this.database, localDate), this.reader.findApplicableGoal(this.database, localDate)]); return { localDate, summary, goal }; }
+  public async history(limit: number, cursor: HistoryCursor | null): Promise<HistoryPage> { if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100) throw new ValidationError('History limit is invalid.'); if (cursor !== null) { try { requireLocalDate(cursor.localDate); requireUtcTimestamp(cursor.occurredAtUtc); } catch { throw new ValidationError('History cursor is invalid.'); } requiredId(cursor.id, 'History cursor ID'); } return this.reader.listHistory(this.database, limit, cursor); }
 }

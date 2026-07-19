@@ -9,13 +9,13 @@ const food = { id: 'food-1', canonicalName: 'Rice', normalizedName: 'rice', curr
 const revision = { id: 'revision-1', foodId: 'food-1', revisionNumber: 1, basisQuantityScaled: 100, basisUnit: 'gram' as const, nutrients, userModified: true, source: { provider: null, recordId: null, datasetVersion: null, licenseId: null, valuesHash: null } };
 const foodCommand = { name: '  Brown Rice  ', basisQuantityScaled: 100, basisUnit: 'gram' as const, nutrients, userModified: true, source: revision.source };
 
-function setup(ids = ['food-2', 'revision-2', 'portion-2', 'goal-2', 'meal-2', 'item-2']) {
+function setup(ids = ['food-2', 'revision-2', 'portion-2', 'goal-2', 'meal-2', 'item-2'], clockLocalDate = '2026-07-16') {
   const executor: DatabaseExecutor = { exec: async () => undefined, run: async () => ({ changes: 1 }), first: async () => null, all: async () => [] };
   const database: DatabaseConnection = { ...executor, withExclusiveTransaction: async (task) => task(executor), close: async () => undefined };
   const reader = { listFoods: jest.fn(async () => []), loadFoodWithCurrentRevision: jest.fn(async () => ({ state: food, revision })), listPortions: jest.fn(async () => []), loadCurrentRevision: jest.fn(async () => revision), loadFoodState: jest.fn(async () => food), loadPortion: jest.fn(async (): Promise<FoodPortion | null> => null), findGoal: jest.fn(async (): Promise<StoredGoal | null> => null), findApplicableGoal: jest.fn(async (): Promise<StoredGoal | null> => null), loadMealHeader: jest.fn(async () => null), mealExists: jest.fn(async () => true), loadMealDetail: jest.fn(async () => null), listToday: jest.fn(async () => ({ meals: [], totals: { caloriesKcalScaled: 0, proteinGScaled: 0, carbohydratesGScaled: 0, fatGScaled: 0 } })), listHistory: jest.fn(async () => ({ meals: [], nextCursor: null })) };
   const writer = { insertFood: jest.fn(async () => ({ changes: 1 })), insertRevision: jest.fn(async () => ({ changes: 1 })), moveCurrentRevision: jest.fn(async () => ({ changes: 1 })), setArchive: jest.fn(async () => ({ changes: 1 })), insertPortion: jest.fn(async () => ({ changes: 1 })), deletePortion: jest.fn(async () => ({ changes: 1 })), insertGoal: jest.fn(async () => ({ changes: 1 })), replaceGoal: jest.fn(async () => ({ changes: 1 })), insertMeal: jest.fn(async () => ({ changes: 1 })), insertMealItem: jest.fn(async () => ({ changes: 1 })), deleteMealItems: jest.fn(async () => ({ changes: 1 })), updateMeal: jest.fn(async () => ({ changes: 1 })), deleteMeal: jest.fn(async () => ({ changes: 1 })), sumPersistedMeal: jest.fn(async () => ({ caloriesKcalScaled: 0, proteinGScaled: 0, carbohydratesGScaled: 0, fatGScaled: 0 })) };
   let next = 0;
-  return { reader, writer, useCases: new ManualLoggingUseCases(database, reader, writer, { next: () => ids[next++] ?? 'extra-id' }, { utcNow: () => '2026-07-16T00:00:00.000Z', localDate: () => '2026-07-16', timezoneOffsetMinutes: () => 330 }) };
+  return { reader, writer, useCases: new ManualLoggingUseCases(database, reader, writer, { next: () => ids[next++] ?? 'extra-id' }, { utcNow: () => '2026-07-16T00:00:00.000Z', localDate: () => clockLocalDate, timezoneOffsetMinutes: () => 330 }) };
 }
 
 describe('manual logging application operations', () => {
@@ -60,8 +60,14 @@ describe('manual logging application operations', () => {
   });
   test('delegates validated applicable-goal/detail/Today/history queries and maps missing meal', async () => {
     const { useCases, reader } = setup();
-    await useCases.applicableGoal('2026-07-16'); await useCases.today('2026-07-16'); await useCases.history(10, null);
+    await useCases.applicableGoal('2026-07-16'); await useCases.today('2026-07-16'); await useCases.todayDashboard(); await useCases.history(10, null);
     expect(reader.findApplicableGoal).toHaveBeenCalled(); expect(reader.listToday).toHaveBeenCalled(); expect(reader.listHistory).toHaveBeenCalled();
+    expect(reader.listToday).toHaveBeenLastCalledWith(expect.anything(), '2026-07-16');
+    expect(reader.findApplicableGoal).toHaveBeenLastCalledWith(expect.anything(), '2026-07-16');
+    await useCases.history(10, { localDate: '2026-07-16', occurredAtUtc: '2026-07-16T00:00:00.000Z', id: 'meal-1' });
+    expect(reader.listHistory).toHaveBeenLastCalledWith(expect.anything(), 10, { localDate: '2026-07-16', occurredAtUtc: '2026-07-16T00:00:00.000Z', id: 'meal-1' });
+    await expect(useCases.history(10, { localDate: 'bad', occurredAtUtc: '2026-07-16T00:00:00.000Z', id: 'meal-1' })).rejects.toBeInstanceOf(ValidationError);
+    await expect(setup([], 'bad-date').useCases.todayDashboard()).rejects.toBeInstanceOf(ValidationError);
     await expect(useCases.mealDetail('missing')).rejects.toBeInstanceOf(NotFoundError);
   });
   test('normalizes bounded food search and exposes structured food and portion results', async () => {

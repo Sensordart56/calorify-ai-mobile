@@ -28,6 +28,7 @@ describe('Phase 2 database route boundary', () => {
     expect(productLayout).toContain('<DatabaseInitializationGate>');
     expect(productLayout).toContain('<Stack.Screen name="(tabs)" />');
     expect(productLayout).toContain('<Stack.Screen name="review"');
+    expect(productLayout).toContain('<Stack.Screen name="meal-detail"');
     expect(productLayout).toContain('<Stack.Screen name="about-data-sources"');
     expect(productLayout).not.toMatch(/database-verification|\+not-found/);
   });
@@ -40,7 +41,7 @@ describe('Phase 2 database route boundary', () => {
   });
 
   test('keeps product files in the pathless group so public destinations are unchanged', () => {
-    for (const route of ['review', 'manual-entry', 'goals', 'food-library', 'models', 'about-data-sources']) {
+    for (const route of ['review', 'meal-detail', 'manual-entry', 'goals', 'food-library', 'food-detail', 'models', 'about-data-sources']) {
       expect(existsSync(join(appRoot, '(app)', `${route}.tsx`))).toBe(true);
       expect(existsSync(join(appRoot, `${route}.tsx`))).toBe(false);
     }

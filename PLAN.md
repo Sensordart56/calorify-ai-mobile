@@ -26,8 +26,9 @@ Update HANDOFF.md after every meaningful implementation milestone and before int
 | Phase 0 — Baseline, review cleanup, and provisional identity | Complete |
 | Phase 1 — Mobile shell and offline navigation | Complete on 2026-07-14; static checks and required representative API 36 runtime gate passed |
 | Phase 2 — SQLite foundation and migrations | Complete on 2026-07-15: corrected API 36 deep-link, disposable verification, recovery, fresh-bootstrap, and relaunch gates passed |
-| Phases 3–14 | Pending |
-| Emulator/device/runtime verification | Phase 0 shell and Phase 1 representative API 36 verification complete; Phase 2 API 36 database route-boundary, disposable harness, recovery, fresh Migration 001 bootstrap, and force-stop/relaunch checks complete; no physical-device or local-model runtime claims |
+| Phase 3 — Complete manual logging slice | Complete on 2026-07-19: Phase 3A/3B plus SQLite-backed Today/History, API 36 online/offline, mutation, pagination, accessibility/layout, lifecycle, and final automated gates passed |
+| Phases 4–14 | Pending |
+| Emulator/device/runtime verification | Phase 0/1 shell, Phase 2 SQLite, and the complete Phase 3 manual product passed their representative Pixel_8/API 36 gates; no API 35/37, TalkBack, physical-device, local-model, performance, release, or Play claim |
 
 ## Macro roadmap
 
@@ -87,7 +88,6 @@ Update HANDOFF.md after every meaningful implementation milestone and before int
 
 - Permanent store name, Android application ID authorization, brand assets, and store/signing owners.
 - Local-model RAM/storage/chipset/device tiers and physical benchmark phones.
-- Exact decimal/rounding and historical goal semantics.
 - Licensed seed sources and IFCT permission/exclusion.
 - Retrieval and model acceptance thresholds.
 - Model hosting, signed manifest, streaming hash implementation, and optional tiers.
@@ -205,7 +205,7 @@ Rollback:
 
 ## Phase 3 — Complete manual logging slice
 
-Status: Phase 3A and Phase 3B complete on 2026-07-16. Database-backed manual-food, meal, portion, and goal screens passed the Pixel_8/API 36 product, dark-mode, 1.3x font-scale, offline save/detail/goal, stale-review, and force-stop/relaunch gates. Today and History remain fixtures for the separately gated Phase 3C checkpoint.
+Status: complete on 2026-07-19. Phase 3A/3B established the transactional manual product; Phase 3C replaced Today and History fixtures and passed query, arithmetic, component, accessibility, route, static/config, migration-identity, export, safety, and owner-assisted Pixel_8/API 36 online/offline, mutation, pagination, layout, navigation, and lifecycle gates. The runtime gate found and corrected a duplicate post-edit Meal Detail stack entry; edit-save now returns to the existing detail and focus reloads its authoritative snapshot before one Back returns to the originating list. Live Expo Doctor still reports only newer SDK 57 patch recommendations than the locked baseline; dependency changes remain separately scoped and were not required for Phase 3.
 
 Deliverables:
 

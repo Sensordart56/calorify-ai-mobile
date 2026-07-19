@@ -56,6 +56,29 @@ export function checkedAdd(left: number, right: number): number {
   return left + right;
 }
 
+/** Returns an integer, half-up percentage capped at 100, or null when no target exists. */
+export function checkedPercentageHalfUp(value: number, target: number): number | null {
+  assertSafeInteger(value, 'Percentage value');
+  assertSafeInteger(target, 'Percentage target');
+  if (target === 0) return null;
+  if (value >= target) return 100;
+
+  let percentage = 0;
+  let remainder = 0;
+  for (let step = 0; step < 100; step += 1) {
+    const distanceToTarget = target - value;
+    if (remainder >= distanceToTarget) {
+      remainder -= distanceToTarget;
+      percentage += 1;
+    } else {
+      remainder += value;
+    }
+  }
+
+  const roundUpAt = Math.floor(target / 2) + (target % 2);
+  return remainder >= roundUpAt ? percentage + 1 : percentage;
+}
+
 export function checkedMultiplyDivide(value: number, multiplier: number, divisor: number): number {
   assertSafeInteger(value, 'Value');
   assertSafeInteger(multiplier, 'Multiplier');

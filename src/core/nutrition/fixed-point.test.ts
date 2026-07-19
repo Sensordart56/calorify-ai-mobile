@@ -1,4 +1,4 @@
-import { checkedAdd, checkedMultiplyDivide, checkedMultiplyDivideHalfUp, FIXED_POINT_SCALE, FixedPointError, scaleDecimal, unscaleDecimal } from './fixed-point';
+import { checkedAdd, checkedMultiplyDivide, checkedMultiplyDivideHalfUp, checkedPercentageHalfUp, FIXED_POINT_SCALE, FixedPointError, scaleDecimal, unscaleDecimal } from './fixed-point';
 
 describe('fixed-point nutrition values', () => {
   test('round-trips canonical decimals at the approved scale', () => {
@@ -29,5 +29,16 @@ describe('fixed-point nutrition values', () => {
     expect(checkedMultiplyDivideHalfUp(2, 1, 3)).toBe(1);
     expect(checkedMultiplyDivideHalfUp(0, Number.MAX_SAFE_INTEGER, 1)).toBe(0);
     expect(() => checkedMultiplyDivideHalfUp(Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER, 2)).toThrow(FixedPointError);
+  });
+
+  test('calculates capped half-up percentages without unsafe multiplication', () => {
+    expect(checkedPercentageHalfUp(0, 10)).toBe(0);
+    expect(checkedPercentageHalfUp(1, 3)).toBe(33);
+    expect(checkedPercentageHalfUp(1, 8)).toBe(13);
+    expect(checkedPercentageHalfUp(10, 10)).toBe(100);
+    expect(checkedPercentageHalfUp(11, 10)).toBe(100);
+    expect(checkedPercentageHalfUp(Number.MAX_SAFE_INTEGER - 1, Number.MAX_SAFE_INTEGER)).toBe(100);
+    expect(checkedPercentageHalfUp(1, 0)).toBeNull();
+    expect(() => checkedPercentageHalfUp(-1, 10)).toThrow(FixedPointError);
   });
 });

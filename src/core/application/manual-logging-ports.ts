@@ -13,7 +13,7 @@ export interface ManualLoggingRepository extends ManualLoggingQuery {
 
 export type RequiredTotals = Pick<Nutrients, 'caloriesKcalScaled' | 'proteinGScaled' | 'carbohydratesGScaled' | 'fatGScaled'>;
 export type StoredGoal = Readonly<{ id: string; effectiveLocalDate: string; createdAt: string; updatedAt: string; totals: RequiredTotals }>;
-export type HistoryCursor = Readonly<{ occurredAtUtc: string; id: string }>;
+export type HistoryCursor = Readonly<{ localDate: string; occurredAtUtc: string; id: string }>;
 export type FoodState = Readonly<{ id: string; canonicalName: string; normalizedName: string; currentRevisionId: string; archivedAt: string | null; createdAt: string; updatedAt: string }>;
 export type FoodListItem = Readonly<{ id: string; canonicalName: string; normalizedName: string; currentRevisionId: string; archivedAt: string | null; basisQuantityScaled: number; basisUnit: FoodRevision['basisUnit']; caloriesKcalScaled: number }>;
 export type FoodWithCurrentRevision = Readonly<{ state: FoodState; revision: FoodRevision }>;
@@ -21,6 +21,7 @@ export type MealHeader = Readonly<{ id: string; category: MealCategory; occurred
 export type MealItemSnapshot = Readonly<{ id: string; mealId: string; position: number; foodId: string | null; foodRevisionId: string | null; inputName: string; inputQuantityScaled: number; inputUnit: string; resolvedQuantityScaled: number; resolvedUnit: FoodRevision['basisUnit']; basisQuantityScaled: number; basisUnit: FoodRevision['basisUnit']; nutrients: Nutrients; resolutionMethod: ResolutionMethod; source: FoodRevision['source']; userModified: boolean; createdAt: string }>;
 export type MealDetail = Readonly<{ header: MealHeader; items: readonly MealItemSnapshot[] }>;
 export type TodaySummary = Readonly<{ meals: readonly MealHeader[]; totals: RequiredTotals }>;
+export type TodayDashboard = Readonly<{ localDate: string; summary: TodaySummary; goal: StoredGoal | null }>;
 export type HistoryPage = Readonly<{ meals: readonly MealHeader[]; nextCursor: HistoryCursor | null }>;
 export interface ManualLoggingQuery {
   listFoods(transaction: DatabaseExecutor, normalizedQuery: string, limit: number): Promise<readonly FoodListItem[]>;

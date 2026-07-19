@@ -14,6 +14,7 @@ import { ReviewScreen } from './review-screen';
 
 const mockPush = jest.fn();
 const mockReplace = jest.fn();
+const mockBack = jest.fn();
 let mockLatestFocusEffect: (() => void | (() => void)) | null = null;
 const mockLogging = {
   foods: jest.fn(), food: jest.fn(), portions: jest.fn(), createManualFood: jest.fn(), appendFoodRevision: jest.fn(),
@@ -32,7 +33,7 @@ const mockDraftApi = {
   clear: jest.fn(() => { mockDraft = null; }),
 };
 
-jest.mock('expo-router', () => ({ useFocusEffect: (effect: () => void | (() => void)) => { mockLatestFocusEffect = effect; return jest.requireActual('react').useEffect(effect, [effect]); }, useRouter: () => ({ push: mockPush, replace: mockReplace }) }));
+jest.mock('expo-router', () => ({ useFocusEffect: (effect: () => void | (() => void)) => { mockLatestFocusEffect = effect; return jest.requireActual('react').useEffect(effect, [effect]); }, useRouter: () => ({ back: mockBack, push: mockPush, replace: mockReplace }) }));
 jest.mock('@/features/shell/manual-logging/manual-logging-provider', () => ({
   ...jest.requireActual('@/features/shell/manual-logging/manual-logging-provider'),
   useManualLogging: () => mockLogging,
@@ -46,7 +47,7 @@ const portion: FoodPortion = { id: 'portion-bowl', foodId: rice.id, label: 'Bowl
 describe('Log composition screen', () => {
   beforeEach(() => {
     mockDraft = null;
-    mockPush.mockReset(); mockReplace.mockReset();
+    mockBack.mockReset(); mockPush.mockReset(); mockReplace.mockReset();
     Object.values(mockDraftApi).forEach((value) => value.mockClear());
     Object.values(mockLogging).forEach((value) => value.mockReset());
     mockLogging.foods.mockResolvedValue([rice]);
@@ -170,7 +171,7 @@ describe('Food Detail screen', () => {
 
 describe('Review screen', () => {
   beforeEach(() => {
-    Object.values(mockLogging).forEach((value) => value.mockReset()); mockPush.mockReset(); mockReplace.mockReset();
+    Object.values(mockLogging).forEach((value) => value.mockReset()); mockBack.mockReset(); mockPush.mockReset(); mockReplace.mockReset();
     mockLogging.food.mockResolvedValue({ state: { id: rice.id, canonicalName: rice.canonicalName, normalizedName: rice.normalizedName, currentRevisionId: revision.id, archivedAt: null, createdAt: '', updatedAt: '' }, revision });
     mockLogging.portions.mockResolvedValue([portion]);
     mockLogging.createMeal.mockRejectedValueOnce(new Error('Storage is full')).mockResolvedValue('meal-1');
@@ -194,6 +195,19 @@ describe('Review screen', () => {
     await waitFor(() => expect(mockLogging.createMeal).toHaveBeenCalledTimes(2));
     expect(mockReplace).toHaveBeenCalledWith('/meal-detail?mealId=meal-1');
   });
+
+  test('returns to the existing Meal Detail after saving an edit', async () => {
+    mockLogging.editMeal.mockResolvedValue(undefined);
+    mockDraft = { mode: 'edit', mealId: 'meal-1', category: 'lunch', occurredAtUtc: '2026-07-16T00:00:00.000Z', localDate: '2026-07-16', timezoneOffsetMinutes: 330, items: [{ id: 'review-item', foodId: rice.id, foodRevisionId: revision.id, canonicalName: rice.canonicalName, inputQuantity: '100', inputUnit: 'gram', portionId: null, requiresReview: false, reviewReason: null }] };
+    const view = await render(<ReviewScreen />);
+    await view.findByText('Preview totals');
+
+    await fireEvent.press(view.getByRole('button', { name: 'Save meal changes' }));
+
+    await waitFor(() => expect(mockLogging.editMeal).toHaveBeenCalledWith('meal-1', expect.anything()));
+    expect(mockBack).toHaveBeenCalledTimes(1);
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
 });
 
 const mealDetail = {
@@ -203,7 +217,7 @@ const mealDetail = {
 
 describe('Meal Detail screen', () => {
   beforeEach(() => {
-    Object.values(mockLogging).forEach((value) => value.mockReset()); mockPush.mockReset();
+    Object.values(mockLogging).forEach((value) => value.mockReset()); mockBack.mockReset(); mockPush.mockReset();
     mockLogging.mealDetail.mockResolvedValue(mealDetail); mockLogging.food.mockResolvedValue({ state: { id: rice.id, canonicalName: rice.canonicalName, normalizedName: rice.normalizedName, currentRevisionId: revision.id, archivedAt: null, createdAt: '', updatedAt: '' }, revision }); mockLogging.portions.mockResolvedValue([]); mockLogging.deleteMeal.mockResolvedValue(undefined);
   });
 
@@ -228,6 +242,17 @@ describe('Meal Detail screen', () => {
     await waitFor(() => expect(retry.getByRole('button', { name: 'Retry' })).toBeOnTheScreen());
     await fireEvent.press(retry.getByRole('button', { name: 'Retry' }));
     await waitFor(() => expect(retry.getByText('Saved rice')).toBeOnTheScreen());
+  });
+
+  test('reloads authoritative snapshots whenever Meal Detail regains focus', async () => {
+    const editedDetail = { ...mealDetail, header: { ...mealDetail.header, totals: { ...mealDetail.header.totals, caloriesKcalScaled: 140_000_000 } } };
+    mockLogging.mealDetail.mockResolvedValueOnce(mealDetail).mockResolvedValueOnce(editedDetail);
+    const view = await render(<MealDetailScreen mealId="meal-1" />);
+    await waitFor(() => expect(view.getAllByText(/130 calories/)).toHaveLength(2));
+
+    await act(async () => { mockLatestFocusEffect?.(); });
+
+    await waitFor(() => expect(view.getByText(/140 calories/)).toBeOnTheScreen());
   });
 });
 

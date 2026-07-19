@@ -6,12 +6,6 @@ export type ReviewItemFixture = Readonly<{
   detail: string;
 }>;
 
-export const todayFixture = {
-  summary: ['Calories: 1,280 preview', 'Protein: 74 g preview', 'Carbohydrates: 138 g preview', 'Fat: 42 g preview'],
-  progress: '1,280 of 2,000 fixture calories',
-  recentMeal: 'Lunch preview — rice bowl',
-} as const;
-
 export const reviewItems: readonly ReviewItemFixture[] = [
   { id: 'oats', name: 'Oats', quantity: '60 g', status: 'Resolved', detail: 'Fixture match shown for review.' },
   { id: 'milk', name: 'Milk', quantity: '1 cup', status: 'Ambiguous', detail: 'Fixture choice needs user confirmation.' },

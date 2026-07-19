@@ -97,11 +97,17 @@ describe('manual logging SQLite repository', () => {
 
   test('uses keyset history and rejects an invalid page size or cursor', async () => {
     executor.allValue = [header, { ...header, id: 'meal-2' }];
-    await expect(repository.listHistory(executor, 1, { occurredAtUtc: header.occurred_at_utc, id: 'meal-0' })).resolves.toMatchObject({ nextCursor: { id: 'meal-1' } });
-    expect(executor.calls[0]?.params).toEqual([header.occurred_at_utc, header.occurred_at_utc, 'meal-0', 2]);
-    expect(executor.calls[0]?.sql).toContain('id > ?');
+    await expect(repository.listHistory(executor, 1, { localDate: header.local_date, occurredAtUtc: header.occurred_at_utc, id: 'meal-0' })).resolves.toMatchObject({ nextCursor: { localDate: header.local_date, occurredAtUtc: header.occurred_at_utc, id: 'meal-1' } });
+    expect(executor.calls[0]?.params).toEqual([header.local_date, header.local_date, header.occurred_at_utc, header.occurred_at_utc, 'meal-0', 2]);
+    expect(executor.calls[0]?.sql).toContain('local_date < ?');
+    expect(executor.calls[0]?.sql).toContain('ORDER BY local_date DESC, occurred_at_utc DESC, id ASC');
+    executor.calls.splice(0);
+    executor.allValue = [header];
+    await expect(repository.listHistory(executor, 1, null)).resolves.toEqual({ meals: [expect.objectContaining({ id: 'meal-1' })], nextCursor: null });
+    expect(executor.calls[0]).toMatchObject({ params: [2] });
     await expect(repository.listHistory(executor, 0, null)).rejects.toBeInstanceOf(RepositoryIntegrityError);
-    await expect(repository.listHistory(executor, 1, { occurredAtUtc: 'bad', id: 'meal-1' })).rejects.toBeInstanceOf(RepositoryIntegrityError);
+    await expect(repository.listHistory(executor, 1, { localDate: '2026-07-15', occurredAtUtc: 'bad', id: 'meal-1' })).rejects.toBeInstanceOf(RepositoryIntegrityError);
+    await expect(repository.listHistory(executor, 1, { localDate: 'bad', occurredAtUtc: header.occurred_at_utc, id: 'meal-1' })).rejects.toBeInstanceOf(RepositoryIntegrityError);
   });
 
   test('rejects corrupt zero-item and non-contiguous persisted meal snapshots', async () => {

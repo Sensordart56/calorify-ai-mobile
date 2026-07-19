@@ -589,6 +589,23 @@ async function goalAndTodayQueries(connection: VerificationConnection): Promise<
   requireCondition(!today.meals.some((meal) => meal.id === excludedMeal), 'Today included a meal from another saved date');
   requireCondition(today.meals.every((meal) => meal.localDate === '2026-07-16'), 'Today returned another saved date');
   requireTotals(today.totals, { caloriesKcalScaled: 8, proteinGScaled: 8, carbohydratesGScaled: 8, fatGScaled: 8 }, 'Today totals changed');
+
+  const dashboard = await useCases.todayDashboard();
+  requireEqual(dashboard.localDate, '2026-07-16', 'Today dashboard date changed');
+  requireEqual(dashboard.goal?.id, firstGoalId, 'Today dashboard applicable goal changed');
+  requireEqual(dashboard.summary.meals.map((meal) => meal.id).join(','), today.meals.map((meal) => meal.id).join(','), 'Today dashboard summary changed');
+
+  const firstHistoryPage = await useCases.history(2, null);
+  requireEqual(firstHistoryPage.meals.map((meal) => meal.id).join(','), [latestMeal, tiedMealOne].join(','), 'History first page ordering changed');
+  requireCondition(firstHistoryPage.nextCursor !== null, 'History first page cursor is missing');
+  const secondHistoryPage = await useCases.history(2, firstHistoryPage.nextCursor);
+  requireEqual(secondHistoryPage.meals.map((meal) => meal.id).join(','), [tiedMealTwo, adjacentUtcMeal].join(','), 'History tied-timestamp page ordering changed');
+  requireCondition(secondHistoryPage.nextCursor !== null, 'History second page cursor is missing');
+  const finalHistoryPage = await useCases.history(2, secondHistoryPage.nextCursor);
+  requireEqual(finalHistoryPage.meals.map((meal) => meal.id).join(','), excludedMeal, 'History saved-date boundary changed');
+  requireEqual(finalHistoryPage.nextCursor, null, 'History end-of-list cursor changed');
+  const allHistoryIds = [...firstHistoryPage.meals, ...secondHistoryPage.meals, ...finalHistoryPage.meals].map((meal) => meal.id);
+  requireEqual(new Set(allHistoryIds).size, allHistoryIds.length, 'History pagination returned duplicate meals');
 }
 
 const operations: Readonly<Record<CaseId, () => Promise<void>>> = {

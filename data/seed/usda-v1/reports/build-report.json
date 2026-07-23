@@ -1,0 +1,11 @@
+{
+  "releaseId": "usda-fdc-v1-2026-04",
+  "acceptedFoods": 216,
+  "foundationFoods": 216,
+  "fnddsFoods": 0,
+  "aliases": 2,
+  "portions": 0,
+  "excludedRows": 5611,
+  "catalogByteLength": 372736,
+  "catalogSha256": "57c1ecfd3d5cc4b39f9e2e5c6b7b903771b741e62ee4b4a77d98d5524277bcb4"
+}

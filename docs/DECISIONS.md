@@ -398,14 +398,36 @@ Decision: Today obtains the current local date through the application clock, re
 
 Consequences: Travel never re-groups persisted history, tied timestamps remain deterministic, page boundaries can merge one saved-date section, and concurrent rows ordered ahead of the active cursor appear on refresh rather than being injected into the current paging session. Routes continue to carry only opaque IDs, and no migration or dependency is required.
 
+## D-026 — USDA-only seed release and conservative lexical acceptance
+
+Date: 2026-07-20
+
+Status: Accepted for Phases 4–5
+
+Decision: Ship only the pinned April 2026 USDA FoodData Central Foundation Foods rows that pass the deterministic CC0/provenance/nutrient gate. Keep the FNDDS allowlist empty until individual survey food codes are reviewed. Quarantine the legacy CSV and exclude IFCT or any source with uncertain redistribution evidence. Import the verified SQLite asset through forward-only Migration 003 release ledgers while preserving all user foods, user revisions, and historical meal snapshots. Use one Unicode normalization contract; auto-select only a unique canonical exact match. Canonical collisions, reviewed aliases, and FTS5 candidates always require explicit confirmation, and any unavailable index or unresolved query retains manual fallback.
+
+Consequences: The first catalog is intentionally compact (216 foods and two reviewed aliases) rather than broad. FTS is derived and rebuildable, nutrition remains authoritative only in stored revisions, and release upgrades are append/fix-forward. Automated gates require 100% automatic precision, at least 90% overall top-five recall, and at least 80% per measured query class before runtime approval.
+
+Revisit when: A new source or FNDDS subset has row-level review evidence, a catalog delta is proposed, or measured user queries justify changing review thresholds without weakening the no-silent-acceptance invariant.
+
+## D-027 — In-memory seed verification and Expo SQLite close workaround
+
+Date: 2026-07-20
+
+Status: Accepted for Phases 4–5
+
+Decision: Hash and size-check the downloaded bundled asset, then deserialize the verified bytes into an isolated in-memory Expo SQLite database for integrity/provenance reads. Do not maintain a mutable copied catalog database beside the application database. Open application and exclusive-transaction connections with `finalizeUnusedStatementsBeforeClosing: false`; statements remain one-shot or explicitly scoped, while close avoids Expo SQLite's native FTS finalization crash observed on SDK 57. The authoritative application database, release ledger, and imported revisions remain persistent and transactional.
+
+Consequences: Fresh install and force-stop/relaunch complete without the observed `exsqlite3_finalize` native crash. A stale or partially copied seed file cannot influence startup because no derived catalog copy is reused. The workaround must be re-evaluated when Expo SQLite fixes its FTS close path; removing it requires API 36 regression evidence for startup, FTS search, and close/relaunch.
+
+Revisit when: The project adopts an Expo SQLite version whose upstream release notes and Android runtime evidence demonstrate that automatic unused-statement finalization is safe with FTS5.
+
 ## Unresolved decision register
 
 | Owner decision | Needed by |
 |---|---|
 | Permanent store name, Android application ID authorization, brand/store owner | Before store configuration |
 | Local-model RAM/storage/chipset/device tiers | Phase 6 |
-| Licensed seed sources, IFCT permission/exclusion, provenance owner | Phase 4 |
-| Retrieval metrics and auto-selection thresholds | Phase 5 |
 | Model acceptance thresholds and physical test phones | Phase 6 |
 | Model host, manifest signature, file hashing implementation | Phase 7 |
 | Optional larger model/license comparison | Phase 6/7 |

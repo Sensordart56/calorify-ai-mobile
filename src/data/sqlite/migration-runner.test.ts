@@ -33,7 +33,7 @@ function createConnection(options: Readonly<{ foreignKeyRows?: readonly Record<s
     if (sql === 'PRAGMA foreign_keys') result = { foreign_keys: 1 };
     if (sql === 'PRAGMA journal_mode = WAL') result = { journal_mode: 'wal' };
     if (sql === 'PRAGMA busy_timeout') result = { timeout: 3_000 };
-    if (sql === 'PRAGMA user_version') result = { user_version: 2 };
+    if (sql === 'PRAGMA user_version') result = { user_version: appMigrations.length };
     if (sql.includes("name = 'schema_migrations'")) result = { name: 'schema_migrations' };
     if (sql === 'PRAGMA quick_check(1)') result = { quick_check: options.quickCheck ?? 'ok' };
     return result;
@@ -102,9 +102,9 @@ describe('migration runner', () => {
     const { connection, state } = createVersionOneFixtureConnection();
     await initializeDatabase(connection, '1.0.0', appMigrations, () => fixture.ledger.appliedAt);
     expect(state.fixturePresent).toBe(true);
-    expect(state.userVersion).toBe(2);
+    expect(state.userVersion).toBe(3);
     expect(state.ledger).toEqual(appMigrations.map((entry) => ({ version: entry.version, checksum: entry.checksum })));
-    expect(state.migrationTwoObjects).toEqual(appMigrations[1]?.statements);
+    expect(state.migrationTwoObjects).toEqual(appMigrations.slice(1).flatMap((entry) => entry.statements.filter((statement) => statement.startsWith('CREATE '))));
     const writes = state.migrationWrites;
     await initializeDatabase(connection, '1.0.0', appMigrations, () => fixture.ledger.appliedAt);
     expect(state.migrationWrites).toBe(writes);
@@ -118,6 +118,6 @@ describe('migration runner', () => {
     await expect(initializeDatabase(connection, '1.0.0', [migrationOne, failingMigration], () => fixture.ledger.appliedAt)).rejects.toThrow('injected migration failure');
     expect(state).toMatchObject({ userVersion: 1, ledger: [{ version: 1, checksum: fixture.migration.checksum }], migrationTwoObjects: [], fixturePresent: true });
     await initializeDatabase(connection, '1.0.0', appMigrations, () => fixture.ledger.appliedAt);
-    expect(state.userVersion).toBe(2);
+    expect(state.userVersion).toBe(3);
   });
 });

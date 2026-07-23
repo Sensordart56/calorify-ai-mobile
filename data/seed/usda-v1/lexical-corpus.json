@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "releaseId": "usda-fdc-v1-2026-04",
+  "minimumOverallTop5Recall": 0.9,
+  "minimumClassTop5Recall": 0.8,
+  "requiredAutomaticPrecision": 1,
+  "safetyQueries": [
+    { "class": "spelling", "query": "avacado" },
+    { "class": "plural", "query": "blueberry" },
+    { "class": "regional", "query": "aubergine" },
+    { "class": "mixed-unit", "query": "one cup rice" },
+    { "class": "unknown", "query": "lunar dragon stew" }
+  ],
+  "queries": [
+    { "class": "reordered", "query": "butter almond", "expectedCanonicalName": "Almond butter, creamy" },
+    { "class": "reordered", "query": "apple granny smith", "expectedCanonicalName": "Apples, granny smith, with skin, raw" },
+    { "class": "reordered", "query": "apple honeycrisp", "expectedCanonicalName": "Apples, honeycrisp, with skin, raw" },
+    { "class": "reordered", "query": "avocado hass", "expectedCanonicalName": "Avocado, Hass, peeled, raw" },
+    { "class": "reordered", "query": "beans black", "expectedCanonicalName": "Beans, black, canned, sodium added, drained and rinsed" },
+    { "class": "reordered", "query": "kidney dark red", "expectedCanonicalName": "Beans, kidney, dark red, canned, sodium added, sugar added, drained and rinsed" },
+    { "class": "reordered", "query": "ribeye beef", "expectedCanonicalName": "Beef, ribeye, steak, boneless, choice, raw" },
+    { "class": "reordered", "query": "bok choy", "expectedCanonicalName": "Cabbage, bok choy, raw" },
+    { "class": "reordered", "query": "cheese feta", "expectedCanonicalName": "Cheese, feta, whole milk, crumbled" },
+    { "class": "reordered", "query": "cheese parmesan", "expectedCanonicalName": "Cheese, parmesan, grated, refrigerated" },
+    { "class": "alias", "query": "aubergine", "expectedCanonicalName": "Eggplant, raw" },
+    { "class": "alias", "query": "garbanzo beans dry", "expectedCanonicalName": "Chickpeas, (garbanzo beans, bengal gram), dry" },
+    { "class": "prefix", "query": "almond but", "expectedCanonicalName": "Almond butter, creamy" },
+    { "class": "prefix", "query": "apples fu", "expectedCanonicalName": "Apples, fuji, with skin, raw" },
+    { "class": "prefix", "query": "brussels spr", "expectedCanonicalName": "Brussels sprouts, raw" },
+    { "class": "prefix", "query": "caulif raw", "expectedCanonicalName": "Cauliflower, raw" },
+    { "class": "prefix", "query": "cherr sweet", "expectedCanonicalName": "Cherries, sweet, dark red, raw" },
+    { "class": "prefix", "query": "chia seed", "expectedCanonicalName": "Chia seeds, dry, raw" },
+    { "class": "prefix", "query": "chicken brea", "expectedCanonicalName": "Chicken, breast, boneless, skinless, raw" },
+    { "class": "prefix", "query": "cabb green", "expectedCanonicalName": "Cabbage, green, raw" },
+    { "class": "prefix", "query": "applesauce unsw", "expectedCanonicalName": "Applesauce, unsweetened, with added vitamin C" },
+    { "class": "prefix", "query": "beef tender", "expectedCanonicalName": "Beef, tenderloin steak, raw" }
+  ]
+}

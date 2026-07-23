@@ -15,9 +15,9 @@ export function SettingsScreen() {
       <StatusBadge label="No settings are saved" />
       <Card>
         <ListRow title="Goals" detail="Fixture targets" onPress={() => router.push(appPaths.goals)} />
-        <ListRow title="Food Library" detail="Fixture foods and source placeholders" onPress={() => router.push(appPaths.foodLibrary)} />
+        <ListRow title="Food Library" detail="Manual and licensed local foods" onPress={() => router.push(appPaths.foodLibrary)} />
         <ListRow title="Models" detail="Manual mode stays available" onPress={() => router.push(appPaths.models)} />
-        <ListRow title="About and Data Sources" detail="Product limitations and future sources" onPress={() => router.push(appPaths.aboutDataSources)} />
+        <ListRow title="About and Data Sources" detail="Catalog release, provenance, and product limits" onPress={() => router.push(appPaths.aboutDataSources)} />
       </Card>
       <Card>
         <ThemedText type="smallBold">Privacy and network mode</ThemedText>

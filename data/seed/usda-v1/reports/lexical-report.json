@@ -1,0 +1,284 @@
+{
+  "releaseId": "usda-fdc-v1-2026-04",
+  "automaticCases": 216,
+  "automaticCorrect": 216,
+  "automaticPrecision": 1,
+  "queryCount": 22,
+  "top5Hits": 22,
+  "overallTop5Recall": 1,
+  "classes": [
+    {
+      "name": "alias",
+      "queries": 2,
+      "top5Hits": 2,
+      "top5Recall": 1
+    },
+    {
+      "name": "prefix",
+      "queries": 10,
+      "top5Hits": 10,
+      "top5Recall": 1
+    },
+    {
+      "name": "reordered",
+      "queries": 10,
+      "top5Hits": 10,
+      "top5Recall": 1
+    }
+  ],
+  "safetyResults": [
+    {
+      "class": "spelling",
+      "query": "avacado",
+      "exactCount": 0,
+      "disposition": "unresolved"
+    },
+    {
+      "class": "plural",
+      "query": "blueberry",
+      "exactCount": 0,
+      "disposition": "unresolved"
+    },
+    {
+      "class": "regional",
+      "query": "aubergine",
+      "exactCount": 0,
+      "disposition": "review"
+    },
+    {
+      "class": "mixed-unit",
+      "query": "one cup rice",
+      "exactCount": 0,
+      "disposition": "unresolved"
+    },
+    {
+      "class": "unknown",
+      "query": "lunar dragon stew",
+      "exactCount": 0,
+      "disposition": "unresolved"
+    }
+  ],
+  "results": [
+    {
+      "class": "reordered",
+      "query": "butter almond",
+      "expectedCanonicalName": "Almond butter, creamy",
+      "expectedFoodId": "seed-food-a6c4f0d9e5438322c8bc7c9a0ab0513096fa4225b3930f046a7cb9b695f37b44",
+      "top5FoodIds": [
+        "seed-food-a6c4f0d9e5438322c8bc7c9a0ab0513096fa4225b3930f046a7cb9b695f37b44"
+      ],
+      "hit": true
+    },
+    {
+      "class": "reordered",
+      "query": "apple granny smith",
+      "expectedCanonicalName": "Apples, granny smith, with skin, raw",
+      "expectedFoodId": "seed-food-aea8fd84f66dee05d6a4317ebaa049ef8553ce8cd2094afafe1681dc9e4f162b",
+      "top5FoodIds": [
+        "seed-food-aea8fd84f66dee05d6a4317ebaa049ef8553ce8cd2094afafe1681dc9e4f162b"
+      ],
+      "hit": true
+    },
+    {
+      "class": "reordered",
+      "query": "apple honeycrisp",
+      "expectedCanonicalName": "Apples, honeycrisp, with skin, raw",
+      "expectedFoodId": "seed-food-63ebd495759a9b8aa0154d0d28fac788082a7dc6ee4ca105e095454180fda9a4",
+      "top5FoodIds": [
+        "seed-food-63ebd495759a9b8aa0154d0d28fac788082a7dc6ee4ca105e095454180fda9a4"
+      ],
+      "hit": true
+    },
+    {
+      "class": "reordered",
+      "query": "avocado hass",
+      "expectedCanonicalName": "Avocado, Hass, peeled, raw",
+      "expectedFoodId": "seed-food-58343025573d8f2310d24ae29326d059434dcae08947fd69a81cb09192144729",
+      "top5FoodIds": [
+        "seed-food-58343025573d8f2310d24ae29326d059434dcae08947fd69a81cb09192144729"
+      ],
+      "hit": true
+    },
+    {
+      "class": "reordered",
+      "query": "beans black",
+      "expectedCanonicalName": "Beans, black, canned, sodium added, drained and rinsed",
+      "expectedFoodId": "seed-food-5ffee283e9559e87f51bed5ac4d47a0837914a2c556e6eae9c9f9668a24b64de",
+      "top5FoodIds": [
+        "seed-food-5ffee283e9559e87f51bed5ac4d47a0837914a2c556e6eae9c9f9668a24b64de"
+      ],
+      "hit": true
+    },
+    {
+      "class": "reordered",
+      "query": "kidney dark red",
+      "expectedCanonicalName": "Beans, kidney, dark red, canned, sodium added, sugar added, drained and rinsed",
+      "expectedFoodId": "seed-food-0bcec2dbfbc12b8a8eae644ce283f3adba2c274a16b69a5858da8d405fef1c77",
+      "top5FoodIds": [
+        "seed-food-0bcec2dbfbc12b8a8eae644ce283f3adba2c274a16b69a5858da8d405fef1c77"
+      ],
+      "hit": true
+    },
+    {
+      "class": "reordered",
+      "query": "ribeye beef",
+      "expectedCanonicalName": "Beef, ribeye, steak, boneless, choice, raw",
+      "expectedFoodId": "seed-food-99c7ddbba31acb5422d2233eebb0d114e803e94689eb6152f239ca5e38803748",
+      "top5FoodIds": [
+        "seed-food-99c7ddbba31acb5422d2233eebb0d114e803e94689eb6152f239ca5e38803748"
+      ],
+      "hit": true
+    },
+    {
+      "class": "reordered",
+      "query": "bok choy",
+      "expectedCanonicalName": "Cabbage, bok choy, raw",
+      "expectedFoodId": "seed-food-2378f9be3cf635dee1babc8555fb270da9dd01fcdd7edc10649f56ec3bc802a6",
+      "top5FoodIds": [
+        "seed-food-2378f9be3cf635dee1babc8555fb270da9dd01fcdd7edc10649f56ec3bc802a6"
+      ],
+      "hit": true
+    },
+    {
+      "class": "reordered",
+      "query": "cheese feta",
+      "expectedCanonicalName": "Cheese, feta, whole milk, crumbled",
+      "expectedFoodId": "seed-food-86b0585606a996324b858a6a5fee02280d029522f9f421ce3dc1f7f2f21d65f4",
+      "top5FoodIds": [
+        "seed-food-86b0585606a996324b858a6a5fee02280d029522f9f421ce3dc1f7f2f21d65f4"
+      ],
+      "hit": true
+    },
+    {
+      "class": "reordered",
+      "query": "cheese parmesan",
+      "expectedCanonicalName": "Cheese, parmesan, grated, refrigerated",
+      "expectedFoodId": "seed-food-e6a5be3e4fa91c9694aef80da07454829fcea8972fb0259a5543bd36936c509b",
+      "top5FoodIds": [
+        "seed-food-e6a5be3e4fa91c9694aef80da07454829fcea8972fb0259a5543bd36936c509b"
+      ],
+      "hit": true
+    },
+    {
+      "class": "alias",
+      "query": "aubergine",
+      "expectedCanonicalName": "Eggplant, raw",
+      "expectedFoodId": "seed-food-13678428b119f17b63cd69a0694bbaf66bd41e79cb86618ede1eecb8d5b7e205",
+      "top5FoodIds": [
+        "seed-food-13678428b119f17b63cd69a0694bbaf66bd41e79cb86618ede1eecb8d5b7e205"
+      ],
+      "hit": true
+    },
+    {
+      "class": "alias",
+      "query": "garbanzo beans dry",
+      "expectedCanonicalName": "Chickpeas, (garbanzo beans, bengal gram), dry",
+      "expectedFoodId": "seed-food-1cf42465f002978f0a5095ee9dfa1110ed276cab7199a23a6b7239dabba5dd6b",
+      "top5FoodIds": [
+        "seed-food-1cf42465f002978f0a5095ee9dfa1110ed276cab7199a23a6b7239dabba5dd6b",
+        "seed-food-1cf42465f002978f0a5095ee9dfa1110ed276cab7199a23a6b7239dabba5dd6b"
+      ],
+      "hit": true
+    },
+    {
+      "class": "prefix",
+      "query": "almond but",
+      "expectedCanonicalName": "Almond butter, creamy",
+      "expectedFoodId": "seed-food-a6c4f0d9e5438322c8bc7c9a0ab0513096fa4225b3930f046a7cb9b695f37b44",
+      "top5FoodIds": [
+        "seed-food-a6c4f0d9e5438322c8bc7c9a0ab0513096fa4225b3930f046a7cb9b695f37b44"
+      ],
+      "hit": true
+    },
+    {
+      "class": "prefix",
+      "query": "apples fu",
+      "expectedCanonicalName": "Apples, fuji, with skin, raw",
+      "expectedFoodId": "seed-food-5c44d8a302bec1de039c2e1599ff4f71f877e7387856f0c795d34bc512f86d27",
+      "top5FoodIds": [
+        "seed-food-5c44d8a302bec1de039c2e1599ff4f71f877e7387856f0c795d34bc512f86d27"
+      ],
+      "hit": true
+    },
+    {
+      "class": "prefix",
+      "query": "brussels spr",
+      "expectedCanonicalName": "Brussels sprouts, raw",
+      "expectedFoodId": "seed-food-4bffeaa22f9a745b70ad4b057080324beb2a88059d2730fd5db53673f864186e",
+      "top5FoodIds": [
+        "seed-food-4bffeaa22f9a745b70ad4b057080324beb2a88059d2730fd5db53673f864186e"
+      ],
+      "hit": true
+    },
+    {
+      "class": "prefix",
+      "query": "caulif raw",
+      "expectedCanonicalName": "Cauliflower, raw",
+      "expectedFoodId": "seed-food-bf93abfc534b12ba34497ac1c567ffc8a4b218103b5f574478a05d15bc127d4f",
+      "top5FoodIds": [
+        "seed-food-bf93abfc534b12ba34497ac1c567ffc8a4b218103b5f574478a05d15bc127d4f"
+      ],
+      "hit": true
+    },
+    {
+      "class": "prefix",
+      "query": "cherr sweet",
+      "expectedCanonicalName": "Cherries, sweet, dark red, raw",
+      "expectedFoodId": "seed-food-adf0f0e2adf51da77106286928c4fccbcdf409b8cbb77d20d2092a6ce4234b33",
+      "top5FoodIds": [
+        "seed-food-adf0f0e2adf51da77106286928c4fccbcdf409b8cbb77d20d2092a6ce4234b33"
+      ],
+      "hit": true
+    },
+    {
+      "class": "prefix",
+      "query": "chia seed",
+      "expectedCanonicalName": "Chia seeds, dry, raw",
+      "expectedFoodId": "seed-food-8f158e7dc2a6788a06d3175735768f4f29138f12adeb5406e0fca33ea60b7849",
+      "top5FoodIds": [
+        "seed-food-8f158e7dc2a6788a06d3175735768f4f29138f12adeb5406e0fca33ea60b7849"
+      ],
+      "hit": true
+    },
+    {
+      "class": "prefix",
+      "query": "chicken brea",
+      "expectedCanonicalName": "Chicken, breast, boneless, skinless, raw",
+      "expectedFoodId": "seed-food-4f6ec35789bf9bbb36ed2b0b039afeb7ae1979aded6148ae7822177c6d2539b3",
+      "top5FoodIds": [
+        "seed-food-4f6ec35789bf9bbb36ed2b0b039afeb7ae1979aded6148ae7822177c6d2539b3"
+      ],
+      "hit": true
+    },
+    {
+      "class": "prefix",
+      "query": "cabb green",
+      "expectedCanonicalName": "Cabbage, green, raw",
+      "expectedFoodId": "seed-food-e1078a6c057cc751d965553d5076ff7768694bd854c3e7c217bd8ffb7cd7a022",
+      "top5FoodIds": [
+        "seed-food-e1078a6c057cc751d965553d5076ff7768694bd854c3e7c217bd8ffb7cd7a022"
+      ],
+      "hit": true
+    },
+    {
+      "class": "prefix",
+      "query": "applesauce unsw",
+      "expectedCanonicalName": "Applesauce, unsweetened, with added vitamin C",
+      "expectedFoodId": "seed-food-715dd1b5ac4973eea9e17e748b8c4233e6721ef04fb5c471051f4592d785ba05",
+      "top5FoodIds": [
+        "seed-food-715dd1b5ac4973eea9e17e748b8c4233e6721ef04fb5c471051f4592d785ba05"
+      ],
+      "hit": true
+    },
+    {
+      "class": "prefix",
+      "query": "beef tender",
+      "expectedCanonicalName": "Beef, tenderloin steak, raw",
+      "expectedFoodId": "seed-food-c558234959b3f37a55d2ff727ada4f798cb9383f2d0934cf1e22196353d5a87a",
+      "top5FoodIds": [
+        "seed-food-c558234959b3f37a55d2ff727ada4f798cb9383f2d0934cf1e22196353d5a87a"
+      ],
+      "hit": true
+    }
+  ]
+}

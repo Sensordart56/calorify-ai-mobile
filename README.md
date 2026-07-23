@@ -2,7 +2,7 @@
 
 Android-first, local-first mobile port of Calorify AI, built with Expo SDK 57, React Native 0.86, Expo Router, and strict TypeScript.
 
-Phase 2 provides the published local SQLite foundation: forward checksummed migrations, foreign keys, fixed-point storage boundaries, and a non-destructive initialization path. Phase 3 is complete: its disposable SQLite and Pixel_8/API 36 gates cover the manual product plus SQLite-backed Today totals/goals/meals and saved-date-grouped keyset History, including online/offline mutations, pagination, lifecycle, and representative accessibility/layout behavior. Local inference, model downloads, and online lookup remain intentionally unimplemented.
+Phase 3 provides the complete offline manual product. Phases 4–5 add a verified USDA FoodData Central Foundation Foods catalog, forward-only Migration 003, and conservative exact/alias/FTS lookup with explicit review. Static, provenance, lexical-quality, and representative Android API 36 runtime gates pass. Local inference, model downloads, and online lookup remain intentionally unimplemented.
 
 ## Current product contract
 
@@ -18,7 +18,9 @@ Install the locked dependencies, then run:
     npm ci
     npm run check
 
-npm run check runs strict TypeScript, zero-warning Expo ESLint, and deterministic Jest tests.
+npm run check verifies routes, immutable migration identities, the licensed seed artifact and lexical quality report, then runs strict TypeScript, zero-warning Expo ESLint, and deterministic Jest tests.
+
+The seed artifact can be reproduced from the pinned official source archives with `npm run build:seed`; `npm run verify:seed` rejects source-contract, selection, license-notice, byte-length, hash, provenance, or integrity drift.
 
 Additional bounded inspection:
 
@@ -39,7 +41,7 @@ Do not use that command unless the current phase explicitly calls for emulator v
 
 - Stable Expo Router JavaScript tabs: Today, Log, History, and Settings.
 - Database-backed product: Today, History, Manual food, Food Library, Food Detail, Review meal, Meal Detail, and Goals.
-- Models and About and Data Sources remain fixture/informational routes for their owning later phases.
+- About and Data Sources reports the active catalog release and its USDA/CC0 basis; Models remains informational for its later phase.
 - Feature screens live under src/features; route files only compose those screens.
 - Framework-independent contracts live under src/core.
 - Shared presentation primitives live under src/shared.
@@ -65,7 +67,7 @@ The root MIT LICENSE intentionally covers the original Calorify AI Mobile applic
 - model weights, tokenizers, prompts distributed with third-party terms;
 - generated build artifacts.
 
-Those materials retain their own licenses, notices, attribution, and redistribution requirements. No nutrition dataset or model weight is currently included.
+Those materials retain their own licenses, notices, attribution, and redistribution requirements. The bundled nutrition catalog is derived only from pinned USDA FoodData Central Foundation Foods under CC0 1.0; its source contract, reviewed selection, license notice, exclusions, row provenance, and hashes live under `data/seed/usda-v1`. No model weight is included.
 
 ## Project documents
 

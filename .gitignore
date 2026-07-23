@@ -47,6 +47,7 @@ example
 
 # local databases, models, credentials, and release artifacts
 *.db
+!assets/data/seed-usda-v1.db
 *.db-*
 *.sqlite
 *.sqlite3

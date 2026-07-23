@@ -34,7 +34,20 @@
           "imageWidth": 76
         }
       ],
-      "expo-sqlite"
+      [
+        "expo-sqlite",
+        {
+          "enableFTS": true
+        }
+      ],
+      [
+        "expo-asset",
+        {
+          "assets": [
+            "./assets/data/seed-usda-v1.db"
+          ]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

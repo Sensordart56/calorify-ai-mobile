@@ -17,7 +17,7 @@ const mockReplace = jest.fn();
 const mockBack = jest.fn();
 let mockLatestFocusEffect: (() => void | (() => void)) | null = null;
 const mockLogging = {
-  foods: jest.fn(), food: jest.fn(), portions: jest.fn(), createManualFood: jest.fn(), appendFoodRevision: jest.fn(),
+  resolveFood: jest.fn(), foods: jest.fn(), food: jest.fn(), portions: jest.fn(), createManualFood: jest.fn(), appendFoodRevision: jest.fn(),
   setFoodArchived: jest.fn(), createPortion: jest.fn(), replaceFoodPortion: jest.fn(), createMeal: jest.fn(),
   editMeal: jest.fn(), mealDetail: jest.fn(), deleteMeal: jest.fn(), applicableGoal: jest.fn(), saveTodayGoal: jest.fn(),
 };
@@ -26,7 +26,7 @@ const mockItemId = createMealDraftItemIdFactory();
 const mockDraftApi = {
   beginCreate: jest.fn(() => { mockDraft = { mode: 'create', mealId: null, category: 'breakfast', occurredAtUtc: '2026-07-16T00:00:00.000Z', localDate: '2026-07-16', timezoneOffsetMinutes: 330, items: [] }; }),
   beginEdit: jest.fn((draft: MealDraft) => { mockDraft = draft; }),
-  addFood: jest.fn((food: FoodListItem) => { if (mockDraft === null) mockDraftApi.beginCreate(); mockDraft = addFoodToDraft(mockDraft as MealDraft, food, mockItemId()); }),
+  addFood: jest.fn((food: FoodListItem, method = 'manual') => { if (mockDraft === null) mockDraftApi.beginCreate(); mockDraft = addFoodToDraft(mockDraft as MealDraft, food, mockItemId(), method); }),
   updateItem: jest.fn((id: string, changes) => { if (mockDraft !== null) mockDraft = updateMealDraftItem(mockDraft, id, changes); }),
   removeItem: jest.fn((id: string) => { if (mockDraft !== null) mockDraft = removeMealDraftItem(mockDraft, id); }),
   setCategory: jest.fn((category: MealDraft['category']) => { if (mockDraft === null) mockDraftApi.beginCreate(); mockDraft = { ...(mockDraft as MealDraft), category }; }),
@@ -51,23 +51,25 @@ describe('Log composition screen', () => {
     Object.values(mockDraftApi).forEach((value) => value.mockClear());
     Object.values(mockLogging).forEach((value) => value.mockReset());
     mockLogging.foods.mockResolvedValue([rice]);
+    mockLogging.resolveFood.mockResolvedValue({ kind: 'automatic', normalizedInput: 'rice', candidate: { food: rice, method: 'exact', matchedText: 'Rice' } });
     mockLogging.food.mockResolvedValue({ state: { id: rice.id, canonicalName: rice.canonicalName, normalizedName: rice.normalizedName, currentRevisionId: rice.currentRevisionId, archivedAt: null, createdAt: '', updatedAt: '' }, revision });
     mockLogging.portions.mockResolvedValue([portion]);
   });
 
   test('keeps composition on Log while selecting a category, adding, editing, removing, and explicitly reviewing', async () => {
     const view = await render(<LogScreen />);
-    await view.findByRole('button', { name: 'Add Rice to meal' });
 
     await fireEvent.press(view.getByRole('button', { name: 'dinner' }));
     expect(mockDraftApi.setCategory).toHaveBeenCalledWith('dinner');
     await view.rerender(<LogScreen />);
     expect(view.getByRole('button', { name: 'dinner selected' })).toBeOnTheScreen();
 
-    await fireEvent.press(view.getByRole('button', { name: 'Add Rice to meal' }));
+    await fireEvent.changeText(view.getByLabelText('Find a local food'), 'rice');
+    await fireEvent.press(view.getByRole('button', { name: 'Find local food' }));
+    await waitFor(() => expect(mockDraftApi.addFood).toHaveBeenCalledWith(rice, 'exact'));
     expect(mockPush).not.toHaveBeenCalled();
     await view.rerender(<LogScreen />);
-    await fireEvent.press(view.getByRole('button', { name: 'Add Rice to meal' }));
+    await fireEvent.press(view.getByRole('button', { name: 'Find local food' }));
     await view.rerender(<LogScreen />);
     expect(mockDraft?.items.map((item) => item.id)).toEqual(['draft-item-0', 'draft-item-1']);
     await waitFor(() => expect(view.getByText('Meal preview')).toBeOnTheScreen());
@@ -84,7 +86,7 @@ describe('Log composition screen', () => {
     await fireEvent.press(view.getAllByRole('button', { name: 'Remove Rice' })[0]);
     await view.rerender(<LogScreen />);
     expect(mockDraftApi.removeItem).toHaveBeenCalledWith('draft-item-0');
-    await fireEvent.press(view.getByRole('button', { name: 'Add Rice to meal' }));
+    await fireEvent.press(view.getByRole('button', { name: 'Find local food' }));
     await view.rerender(<LogScreen />);
     expect(mockDraft?.items.map((item) => item.id)).toEqual(['draft-item-1', 'draft-item-2']);
   });

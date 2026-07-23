@@ -229,6 +229,8 @@ Rollback:
 
 ## Phase 4 — Licensed seed database
 
+Status: complete on 2026-07-20. Static/provenance gates pass; a clean Medium Phone Android API 36 bootstrap installed and disclosed `usda-fdc-v1-2026-04`, and force-stop/relaunch preserved the active release without a native crash. Release-delta rules are covered by deterministic upgrade tests; a second real catalog release is not fabricated solely for runtime evidence.
+
 Deliverables:
 
 - Quarantine the legacy CSV until every record has defensible provenance and redistribution rights.
@@ -252,6 +254,8 @@ Rollback:
 - Ship a smaller fully licensed dataset; manual logging remains complete.
 
 ## Phase 5 — Lexical food resolution and review
+
+Status: complete on 2026-07-20. Automated gates pass at 100% unique-exact auto-selection precision and 100% top-five recall for the versioned alias, prefix, and reordered corpus. Medium Phone Android API 36 verified automatic canonical exact resolution, explicit alias and reordered-FTS review, unresolved/manual fallback, and live lookup while emulator networking was disabled.
 
 Deliverables:
 

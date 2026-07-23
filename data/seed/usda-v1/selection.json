@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "releaseId": "usda-fdc-v1-2026-04",
+  "includeAllValidatedFoundation": true,
+  "includedFnddsFoodCodes": [],
+  "nameOverrides": {},
+  "aliases": {
+    "foundation:11209": [
+      { "alias": "Aubergine", "locale": "en-GB" }
+    ],
+    "foundation:100311": [
+      { "alias": "Garbanzo beans, dry", "locale": "en-US" }
+    ]
+  },
+  "excludedStableKeys": [],
+  "notes": "FNDDS remains empty until its exact food-code allowlist and aliases receive row review. Foundation Foods alone is the minimum viable licensed seed. Aliases are a deliberately small, reviewed regional-name allowlist and never auto-resolve."
+}

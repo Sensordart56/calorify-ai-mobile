@@ -386,6 +386,14 @@ The build pipeline must:
 
 The current legacy CSV fails the provenance gate and is input evidence only, not a source artifact.
 
+### Phase 4–5 implemented contract
+
+Migration 003 adds release/source/membership ledgers, one active-release pointer, and rebuildable FTS state without changing Migrations 001 or 002. The shipped `usda-fdc-v1-2026-04` catalog contains 216 validated Foundation Foods and two reviewed aliases; the FNDDS allowlist is intentionally empty. Every catalog food has a stable provider key, FDC record ID, dataset version, source URL, CC0 identifier/attribution, retrieval evidence, payload hash, immutable revision ID, and fixed-point nutrients per 100 grams.
+
+Startup verifies the bundled database byte length and SHA-256, deserializes those verified bytes into an isolated in-memory SQLite catalog, runs foreign-key and quick checks, then imports it into the application database in one exclusive transaction. This avoids a mutable derived database-file copy and never opens the authoritative catalog for writing. A release upgrade appends immutable revisions, moves only an unmodified seed food that still points to the prior release revision, retires only removed unmodified seed rows, and never replaces user-created or user-modified records. Historical meal snapshots are untouched. Import or FTS failure leaves manual logging usable; recovery is fix-forward and never resets the application database.
+
+FTS5 is a derived, disposable index enabled through the Expo SQLite config plugin. Its schema is outside the forward migration ledger so an unsupported/corrupt index can be dropped and rebuilt without changing authoritative rows. Exact canonical lookup runs first and auto-selects only one unique active match. Canonical collisions, aliases, and ranked FTS results require review. Missing/stale FTS state yields unresolved/manual fallback.
+
 ## Backup, export, and recovery
 
 - The approved privacy-first Phase 2 baseline is `android.allowBackup: false`. It disables Android backup and restore for all application data, not just the database. Until explicit export/import exists, uninstall, device loss, or device replacement can therefore cause unrecoverable local-data loss.

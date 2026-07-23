@@ -1,13 +1,13 @@
 # Current Handoff
 
-Last updated: 2026-07-19
+Last updated: 2026-07-20
 
 ## Current state
 
 - Repository: `C:\B Drive\Apps\calorify-ai-mobile`
 - Read-only legacy reference: `C:\B Drive\Apps\Calorify AI`
-- Branch: `codex/phase-3c-today-history` (Phase 3C implementation branch; no upstream configured)
-- Base: clean synchronized `main` / `origin/main` at `dd146bba377f1770e97dfc3567308fd7b9c42ddb`, merge commit for Phase 3B pull request #4
+- Branch: `main`, clean and synchronized with `origin/main` at `23f5dd241e77ab1c6adeb39320c925a1c5eafe85`.
+- Baseline: Phase 3C merged through pull request #5 at `23f5dd2`; the Phase 3C implementation commit is `734b19c`.
 - Phase 0: complete and published.
 - Phase 1: merged into `main` through pull request #1 on 2026-07-14; merge commit `6159532`.
 - Before Phase 2 planning, local `main` was clean and synchronized with `origin/main` at `6159532`.
@@ -357,3 +357,36 @@ The Phase 3B API 36 runtime gate and final diff review are complete. The smalles
 ## Continuation prompt
 
 Phase 3C is complete and ready for independent final review/commit on `codex/phase-3c-today-history`, based on merged `main` commit `dd146bb`. SQLite-backed Today, saved-date-grouped 20-row keyset History, exact progress, refresh/refocus, opaque Meal Detail navigation, online/offline mutations, pagination, lifecycle, portrait, and representative dark/1.3x-font behavior passed on Pixel_8/API 36. The duplicate post-edit detail stack found at runtime was corrected and retested. `npm run check` passes 26 suites / 142 tests plus config, immutable migration/package identity, corrected export, route, artifact, fixture, and secret gates. Expo Doctor's only failure remains newer SDK 57 patch recommendations, deliberately left for separately scoped dependency maintenance. The worktree is fully unstaged/uncommitted; the smallest next action is independent diff review and owner-authorized commit handling. Do not publish, release, or begin Phase 4; TalkBack, Predictive Back, API 35/API 37, and physical-device work remain deferred.
+
+## 2026-07-20 Phase 4-5 implementation authorization and baseline correction
+
+- The owner approved the combined Phase 4-5 implementation plan with independently enforced provenance and lexical-review gates.
+- Fresh inspection proved `main` and `origin/main` are clean and synchronized at merge commit `23f5dd2`; Phase 3C is therefore present in the implementation baseline. The stale pre-merge branch/base lines above were corrected before implementation work began.
+- `npm run check` passed on the baseline with 26 suites / 142 tests. Migration 001 and Migration 002 match their merged Phase 3A Git blobs (`498022d` and `adc39f7`) and their immutable canonical checksums remain unchanged.
+- Owner decisions: USDA FoodData Central CC0 only; unique canonical exact is the only automatic draft resolution; aliases and FTS always require confirmation; lexical acceptance requires 100% automatic-match precision, 100% manual fallback availability, and FTS top-5 recall of at least 90% overall / 80% per supported class.
+- The legacy `data/foods.csv` remains quarantined: its 1,776 rows combine Open Food Facts, IFCT-derived, curated, and preserved records while the writer strips row-level `_source`. No legacy nutrition row is authorized for import.
+- Current milestone: create the reproducible USDA provenance/source-selection contract without bundling nutrition rows. No Phase 6 or later capability is authorized.
+
+## Continuation prompt — 2026-07-20
+
+Continue only the approved combined Phase 4-5 workstream from clean merged `main` at `23f5dd2`. Enforce the Phase 4A provenance gate before adding any catalog row: USDA FoodData Central CC0 is the sole approved nutrition source; IFCT, Open Food Facts, legacy CSV rows, unknown provenance, embeddings, models, network lookup, accounts, analytics, native generation, and release work remain excluded. Keep Migration 001 and 002 immutable, preserve manual/offline operation and every user/history row, and update this handoff after each meaningful milestone.
+
+## 2026-07-20 Phase 4–5 completion milestone
+
+- Built the reproducible `usda-fdc-v1-2026-04` CC0 catalog from pinned official April 2026 USDA archives. The deterministic asset contains 216 Foundation Foods, two reviewed aliases, zero unreviewed FNDDS rows, row-level provenance/content hashes, a checked source manifest, selection contract, license notice, and reproducibility report.
+- Added immutable checksummed Migration 003 and transactional seed release/source/membership ledgers without modifying Migrations 001 or 002. Seed install is exclusive and bound; upgrades advance only unchanged prior seed revisions, preserve user-modified revisions, retire only removed unmodified seed rows, and reject identity collisions with manual foods.
+- Added Unicode normalization, unique-canonical-only automatic resolution, locale-ranked alias review, rebuildable FTS5 candidates, explicit candidate confirmation, and unresolved/manual fallback. The versioned lexical report records 100% automatic precision and 100% top-five recall overall and for alias, prefix, and reordered classes.
+- The bundled asset is size/SHA-256 verified and deserialized into an isolated in-memory SQLite catalog for integrity/provenance reads. This replaced a derived-file copy that Expo's file layer could not safely replace while SQLite retained the filename. D-027 records the design and the SDK 57 `finalizeUnusedStatementsBeforeClosing: false` workaround for the observed native FTS close crash.
+- Medium Phone Android 16/API 36 runtime passed: clean Expo Go data bootstrap reached Today; About disclosed active release `usda-fdc-v1-2026-04`; exact `Eggplant, raw` added automatically; regional alias `aubergine` and reordered `raw eggplant` produced explicit review candidates; `zzzznotfood` stayed unresolved with Create a manual food available; reordered FTS still worked while emulator Wi-Fi and mobile data were disabled and both were restored afterward; force-stop/relaunch returned to Today. No final red screen, JavaScript application error, or native SQLite crash was observed.
+- The final repository gate passes 28 suites / 153 tests, including seed import/reuse, unchanged-release advancement, user-modified preservation, manual-identity collision rejection, lexical policy, migration identity, route boundaries, strict TypeScript, and zero-warning lint. `git diff --check` also passes. No native project, model, network provider, account, analytics, release, publication, commit, push, or pull request was created.
+- Public Expo configuration resolves SDK 57, `android.allowBackup: false`, SQLite FTS enabled, and the seed database registered through the Expo Asset plugin. A bounded Android export succeeded with one Hermes bundle and included `assets/data/seed-usda-v1.db` at 373 KB; this is bundle evidence, not a native release build.
+
+## Continuation prompt — 2026-07-20
+
+Phases 4–5 are implemented and runtime-accepted on the Medium Phone API 36 emulator. The worktree remains intentionally unstaged and uncommitted for independent review. The smallest safe next action is review of the complete Phase 4–5 diff and, only with owner authorization, commit/publication handling. Do not begin Phase 6, add a model/runtime, add online lookup, generate native projects, change dependencies, or publish a release without a separately approved phase.
+
+## 2026-07-23 review correction
+
+- Independent review found that the repository-wide `*.db` ignore rule also excluded the required bundled `assets/data/seed-usda-v1.db`, so a normal Phase 4–5 commit would have omitted the runtime asset even though local verification passed.
+- Added the narrow `!assets/data/seed-usda-v1.db` exception. Local databases and every other database pattern remain ignored; the bundled seed database now appears in normal Git status and can be included in the intended Phase 4–5 staged set.
+- The catalog bytes and manifest were not changed, so the completed API 36 emulator evidence remains valid. The corrected full repository gate passes: route, migration, seed, and lexical verification; 100% automatic precision and top-five recall; strict TypeScript; zero-warning lint; and 28 Jest suites / 153 tests.

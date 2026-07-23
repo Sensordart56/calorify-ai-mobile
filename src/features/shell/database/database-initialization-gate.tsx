@@ -5,6 +5,9 @@ import { classifyDatabaseError, type DatabaseInitializationError } from '@/core/
 import { openExpoDatabase } from '@/data/sqlite/expo-sqlite-database';
 import { resolveConfiguredApplicationVersion } from '@/data/expo-application-version';
 import { initializeDatabase } from '@/data/sqlite/migration-runner';
+import { installBundledSeedCatalog } from '@/data/sqlite/bundled-seed-catalog';
+import { rebuildFoodSearchIndex } from '@/data/sqlite/food-search-index';
+import type { SeedCatalogStatus } from '@/core/seed/catalog';
 import { ActionButton } from '@/shared/ui/action-button';
 import { ErrorState, LoadingState } from '@/shared/ui/state-panels';
 import { Screen } from '@/shared/ui/screen';
@@ -17,12 +20,15 @@ type DatabaseConnectionRelease = () => Promise<void>;
 type DevelopmentFailureDiagnostic = Readonly<{ category: DatabaseErrorCategory; step: string }>;
 
 const DatabaseContext = createContext<DatabaseConnection | null>(null);
+const SeedCatalogContext = createContext<SeedCatalogStatus>({ state: 'unavailable', reason: 'asset' });
 
 export function useDatabaseConnection(): DatabaseConnection {
   const connection = useContext(DatabaseContext);
   if (connection === null) throw new Error('The database is not ready.');
   return connection;
 }
+
+export function useSeedCatalogStatus(): SeedCatalogStatus { return useContext(SeedCatalogContext); }
 
 function messageFor(phase: DatabaseStartupState['phase']): string {
   switch (phase) {
@@ -52,6 +58,7 @@ export function DatabaseInitializationGate({
 }>) {
   const [state, setState] = useState<DatabaseStartupState>({ phase: 'opening' });
   const [connection, setConnection] = useState<DatabaseConnection | null>(null);
+  const [seedCatalog, setSeedCatalog] = useState<SeedCatalogStatus>({ state: 'unavailable', reason: 'asset' });
   const [attempt, setAttempt] = useState(0);
   const currentAttempt = useRef(0);
 
@@ -77,17 +84,23 @@ export function DatabaseInitializationGate({
         }
         setState({ phase: 'configuring' });
         setState({ phase: 'migrating' });
-        await initialize(opened, resolveApplicationVersion());
+        const applicationVersion = resolveApplicationVersion();
+        await initialize(opened, applicationVersion);
         if (!isCurrent()) {
           await closeOpened();
           return;
         }
         setState({ phase: 'checking' });
+        let nextSeedCatalog: SeedCatalogStatus;
+        try { nextSeedCatalog = await installBundledSeedCatalog(opened, applicationVersion); }
+        catch { nextSeedCatalog = { state: 'unavailable', reason: 'asset' }; }
+        await rebuildFoodSearchIndex(opened);
         if (!isCurrent()) {
           await closeOpened();
           return;
         }
         onConnectionReady?.(closeOpened);
+        setSeedCatalog(nextSeedCatalog);
         setConnection(opened);
         setState({ phase: 'ready' });
       } catch (error) {
@@ -107,7 +120,7 @@ export function DatabaseInitializationGate({
   }, [attempt, databaseName, initialize, onConnectionReady, onInitializationFailure, resolveApplicationVersion]);
 
   if (state.phase === 'ready' && connection !== null) {
-    return <DatabaseContext.Provider value={connection}>{children}</DatabaseContext.Provider>;
+    return <DatabaseContext.Provider value={connection}><SeedCatalogContext.Provider value={seedCatalog}>{children}</SeedCatalogContext.Provider></DatabaseContext.Provider>;
   }
   if (state.phase === 'failed') {
     return (

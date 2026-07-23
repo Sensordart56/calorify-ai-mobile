@@ -55,6 +55,23 @@ describe('manual logging SQLite repository', () => {
     await expect(repository.listFoods(executor, '%', 51)).rejects.toBeInstanceOf(RepositoryIntegrityError);
   });
 
+  test('automatically resolves only one canonical exact match and binds the input', async () => {
+    const row = { id: 'food-1', canonical_name: 'Rice', normalized_name: 'rice', current_revision_id: 'revision-1', archived_at: null, basis_quantity_scaled: 100, basis_unit: 'gram', calories_kcal_scaled: 1 };
+    executor.allValue = [row];
+    await expect(repository.resolveFood(executor, 'rice', null, 10)).resolves.toMatchObject({ kind: 'automatic', candidate: { method: 'exact', food: { id: 'food-1' } } });
+    expect(executor.calls[0]?.params).toEqual(['rice', 10]);
+    expect(executor.calls[0]?.sql).not.toContain("rice' OR 1=1");
+    executor.calls.splice(0); executor.allValue = [row, { ...row, id: 'food-2', current_revision_id: 'revision-2' }];
+    await expect(repository.resolveFood(executor, 'rice', null, 10)).resolves.toMatchObject({ kind: 'review', candidates: [{ method: 'exact' }, { method: 'exact' }] });
+  });
+
+  test('keeps a missing lexical index recoverable and unresolved', async () => {
+    executor.allValue = [];
+    await expect(repository.resolveFood(executor, 'green apple', 'en-US', 10)).resolves.toEqual({ kind: 'unresolved', normalizedInput: 'green apple' });
+    expect(executor.calls[0]?.params).toEqual(['green apple', 10]);
+    expect(executor.calls[1]?.params).toEqual(['green apple', 'en-US', 'en-US', 'en-US', 10]);
+  });
+
   test('loads archived food with its current revision and lists portions deterministically', async () => {
     executor.firstValue = { id: 'food-1', canonical_name: 'Rice', normalized_name: 'rice', current_revision_id: 'revision-1', archived_at: '2026-07-15T12:00:00.000Z', created_at: '2026-07-15T12:00:00.000Z', updated_at: '2026-07-15T12:00:00.000Z' };
     const originalFirst = executor.first.bind(executor); let count = 0;
@@ -62,7 +79,7 @@ describe('manual logging SQLite repository', () => {
     await expect(repository.loadFoodWithCurrentRevision(executor, 'food-1')).resolves.toMatchObject({ state: { archivedAt: '2026-07-15T12:00:00.000Z' }, revision: { id: 'revision-1' } });
     executor.allValue = [{ id: 'portion-2', food_id: 'food-1', label: 'Cup', normalized_label: 'cup', quantity_scaled: 1, equivalent_quantity_scaled: 240, equivalent_unit: 'millilitre' }];
     await repository.listPortions(executor, 'food-1');
-    expect(executor.calls.at(-1)?.sql).toContain('ORDER BY normalized_label ASC, id ASC');
+    expect(executor.calls.at(-1)?.sql).toContain('ORDER BY p.normalized_label ASC, p.id ASC');
   });
 
   test('propagates mutation counts and binds the full meal insert', async () => {

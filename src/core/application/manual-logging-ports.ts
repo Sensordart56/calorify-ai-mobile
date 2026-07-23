@@ -1,5 +1,6 @@
 import type { DatabaseExecutor, DatabaseMutationResult } from '@/core/database/contracts';
 import type { FoodPortion, FoodRevision, MealCategory, Nutrients, ResolutionMethod } from '@/core/domain/manual-logging';
+import type { FoodResolution } from '@/core/search/food-resolution';
 
 export type ReviewedItem = Readonly<{ foodId: string | null; foodRevisionId: string | null; portionId: string | null; inputName: string; inputQuantityScaled: number; inputUnit: string; resolutionMethod: ResolutionMethod }>;
 export type MealCommand = Readonly<{ category: MealCategory; occurredAtUtc: string; localDate: string; timezoneOffsetMinutes: number; items: readonly ReviewedItem[] }>;
@@ -24,6 +25,7 @@ export type TodaySummary = Readonly<{ meals: readonly MealHeader[]; totals: Requ
 export type TodayDashboard = Readonly<{ localDate: string; summary: TodaySummary; goal: StoredGoal | null }>;
 export type HistoryPage = Readonly<{ meals: readonly MealHeader[]; nextCursor: HistoryCursor | null }>;
 export interface ManualLoggingQuery {
+  resolveFood?(transaction: DatabaseExecutor, normalizedInput: string, locale: string | null, limit: number): Promise<FoodResolution>;
   listFoods(transaction: DatabaseExecutor, normalizedQuery: string, limit: number): Promise<readonly FoodListItem[]>;
   loadFoodWithCurrentRevision(transaction: DatabaseExecutor, foodId: string): Promise<FoodWithCurrentRevision | null>;
   listPortions(transaction: DatabaseExecutor, foodId: string): Promise<readonly FoodPortion[]>;

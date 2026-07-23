@@ -4,6 +4,7 @@ import { requireLocalDate } from '@/core/time/local-date';
 import { requireUtcTimestamp } from '@/core/time/utc-timestamp';
 import { checkedAdd } from '@/core/nutrition/fixed-point';
 import type { FoodListItem, FoodState, FoodWithCurrentRevision, HistoryCursor, HistoryPage, ManualLoggingQuery, ManualLoggingRepository, ManualLoggingWriter, MealDetail, MealHeader, MealItemSnapshot, MealCommand, PersistedItem, RequiredTotals, StoredGoal, TodaySummary } from '@/core/application/manual-logging-ports';
+import { buildFtsPrefixExpression, type FoodResolution, type FoodResolutionCandidate, type LexicalResolutionMethod } from '@/core/search/food-resolution';
 
 type RevisionRow = Readonly<{ id: string; food_id: string; revision_number: number; basis_quantity_scaled: number; basis_unit: FoodRevision['basisUnit']; calories_kcal_scaled: number; protein_g_scaled: number; carbohydrates_g_scaled: number; fat_g_scaled: number; fibre_g_scaled: number | null; sugar_g_scaled: number | null; sodium_mg_scaled: number | null; user_modified: number; provider: string | null; provider_record_id: string | null; dataset_version: string | null; license_id: string | null; payload_hash: string | null }>;
 
@@ -25,15 +26,40 @@ function add(left: number, right: number): number { try { return checkedAdd(left
 function totals(row: Readonly<Record<string, unknown>>): RequiredTotals { return { caloriesKcalScaled: integer(row.calories_kcal_scaled, 'Calories'), proteinGScaled: integer(row.protein_g_scaled, 'Protein'), carbohydratesGScaled: integer(row.carbohydrates_g_scaled, 'Carbohydrates'), fatGScaled: integer(row.fat_g_scaled, 'Fat') }; }
 function mapRevision(row: RevisionRow): FoodRevision { return { id: text(row.id, 'Revision ID', 128), foodId: text(row.food_id, 'Food ID', 128), revisionNumber: integer(row.revision_number, 'Revision number', 1), basisQuantityScaled: integer(row.basis_quantity_scaled, 'Basis quantity', 1), basisUnit: oneOf(row.basis_unit, units, 'Basis unit'), nutrients: { ...totals(row), fibreGScaled: nullableInteger(row.fibre_g_scaled, 'Fibre'), sugarGScaled: nullableInteger(row.sugar_g_scaled, 'Sugar'), sodiumMgScaled: nullableInteger(row.sodium_mg_scaled, 'Sodium') }, userModified: bool(row.user_modified, 'User modified'), source: { provider: nullableText(row.provider, 'Provider'), recordId: nullableText(row.provider_record_id, 'Provider record'), datasetVersion: nullableText(row.dataset_version, 'Dataset version'), licenseId: nullableText(row.license_id, 'License'), valuesHash: hash(row.payload_hash, 'Values hash') } }; }
 function mapHeader(row: Readonly<Record<string, unknown>>): MealHeader { const offset = integer(row.timezone_offset_minutes, 'Timezone offset', -720); if (offset > 840) throw new RepositoryIntegrityError('Timezone offset is invalid.'); return { id: text(row.id, 'Meal ID', 128), category: oneOf(row.category, categories, 'Meal category') as MealCategory, occurredAtUtc: utc(row.occurred_at_utc, 'Meal UTC timestamp'), localDate: localDate(row.local_date, 'Meal local date'), timezoneOffsetMinutes: offset, createdAt: utc(row.created_at, 'Meal created timestamp'), updatedAt: utc(row.updated_at, 'Meal updated timestamp'), totals: totals(row) }; }
+function mapFood(row: Readonly<Record<string, unknown>>): FoodListItem { return { id: text(row.id, 'Food ID', 128), canonicalName: text(row.canonical_name, 'Food name'), normalizedName: text(row.normalized_name, 'Normalized food name'), currentRevisionId: text(row.current_revision_id, 'Current revision ID', 128), archivedAt: row.archived_at === null ? null : utc(row.archived_at, 'Archived timestamp'), basisQuantityScaled: integer(row.basis_quantity_scaled, 'Basis quantity', 1), basisUnit: oneOf(row.basis_unit, units, 'Basis unit'), caloriesKcalScaled: integer(row.calories_kcal_scaled, 'Calories') }; }
+function candidate(row: Readonly<Record<string, unknown>>, method: LexicalResolutionMethod, matchedText: string): FoodResolutionCandidate { return { food: mapFood(row), method, matchedText }; }
+
+const visibleFoodSelect = 'SELECT f.id, f.canonical_name, f.normalized_name, f.current_revision_id, f.archived_at, r.basis_quantity_scaled, r.basis_unit, r.calories_kcal_scaled FROM foods f JOIN food_revisions r ON r.food_id = f.id AND r.id = f.current_revision_id';
 
 export class SqliteManualLoggingRepository implements ManualLoggingRepository, ManualLoggingWriter, ManualLoggingQuery {
+  public async resolveFood(transaction: DatabaseExecutor, normalizedInput: string, locale: string | null, limit: number): Promise<FoodResolution> {
+    if (normalizedInput.length < 1 || normalizedInput.length > 256 || !Number.isSafeInteger(limit) || limit < 1 || limit > 20 || (locale !== null && (locale.length < 2 || locale.length > 35))) throw new RepositoryIntegrityError('Food resolution request is invalid.');
+    const exactRows = await transaction.all<Readonly<Record<string, unknown>>>(`${visibleFoodSelect} WHERE f.archived_at IS NULL AND f.normalized_name = ? ORDER BY CASE f.origin WHEN 'user' THEN 0 WHEN 'seed' THEN 1 ELSE 2 END, f.id ASC LIMIT ?`, [normalizedInput, limit]);
+    const exact = exactRows.map((row) => candidate(row, 'exact', text(row.canonical_name, 'Food name')));
+    const uniqueExact = exact.length === 1 ? exact[0] : undefined;
+    if (uniqueExact !== undefined) return { kind: 'automatic', normalizedInput, candidate: uniqueExact };
+    if (exact.length > 1) return { kind: 'review', normalizedInput, candidates: exact };
+
+    const aliasRows = await transaction.all<Readonly<Record<string, unknown>>>(`${visibleFoodSelect} JOIN food_aliases a ON a.food_id = f.id LEFT JOIN seed_release_aliases sra ON sra.alias_id = a.id LEFT JOIN seed_catalog_state cs ON cs.active_release_id = sra.release_id WHERE f.archived_at IS NULL AND a.normalized_alias = ? AND (? IS NULL OR a.locale IS NULL OR a.locale = ?) AND (a.origin <> 'seed' OR cs.singleton = 1) ORDER BY CASE WHEN a.locale = ? THEN 0 WHEN a.locale IS NULL THEN 1 ELSE 2 END, a.normalized_alias ASC, f.normalized_name ASC, f.id ASC LIMIT ?`, [normalizedInput, locale, locale, locale, limit]);
+    const aliases = aliasRows.map((row) => candidate(row, 'alias', normalizedInput));
+    if (aliases.length > 0) return { kind: 'review', normalizedInput, candidates: aliases };
+
+    try {
+      const state = await transaction.first<Readonly<{ singleton: number }>>('SELECT i.singleton FROM food_search_index_state i LEFT JOIN seed_catalog_state c ON c.singleton = 1 WHERE i.singleton = 1 AND i.active_release_id IS c.active_release_id');
+      if (state === null) return { kind: 'unresolved', normalizedInput };
+      const ftsRows = await transaction.all<Readonly<Record<string, unknown>>>(`${visibleFoodSelect} JOIN foods_fts x ON x.food_id = f.id WHERE foods_fts MATCH ? AND f.archived_at IS NULL ORDER BY bm25(foods_fts), CASE x.kind WHEN 'canonical' THEN 0 ELSE 1 END, f.normalized_name ASC, f.id ASC LIMIT ?`, [buildFtsPrefixExpression(normalizedInput), limit * 3]);
+      const seen = new Set<string>(); const ranked: FoodResolutionCandidate[] = [];
+      for (const row of ftsRows) { const mapped = candidate(row, 'fts', normalizedInput); if (!seen.has(mapped.food.id)) { seen.add(mapped.food.id); ranked.push(mapped); } if (ranked.length === limit) break; }
+      return ranked.length === 0 ? { kind: 'unresolved', normalizedInput } : { kind: 'review', normalizedInput, candidates: ranked };
+    } catch { return { kind: 'unresolved', normalizedInput }; }
+  }
   public async listFoods(transaction: DatabaseExecutor, normalizedQuery: string, limit: number): Promise<readonly FoodListItem[]> {
     if (typeof normalizedQuery !== 'string' || normalizedQuery.length > 256 || !Number.isSafeInteger(limit) || limit < 1 || limit > 50) throw new RepositoryIntegrityError('Food search is invalid.');
     const query = normalizedQuery.length === 0
       ? 'SELECT f.id, f.canonical_name, f.normalized_name, f.current_revision_id, f.archived_at, r.basis_quantity_scaled, r.basis_unit, r.calories_kcal_scaled FROM foods f JOIN food_revisions r ON r.food_id = f.id AND r.id = f.current_revision_id ORDER BY f.normalized_name ASC, f.id ASC LIMIT ?'
       : 'SELECT f.id, f.canonical_name, f.normalized_name, f.current_revision_id, f.archived_at, r.basis_quantity_scaled, r.basis_unit, r.calories_kcal_scaled FROM foods f JOIN food_revisions r ON r.food_id = f.id AND r.id = f.current_revision_id WHERE instr(f.normalized_name, ?) > 0 ORDER BY f.normalized_name ASC, f.id ASC LIMIT ?';
     const rows = await transaction.all<Readonly<Record<string, unknown>>>(query, normalizedQuery.length === 0 ? [limit] : [normalizedQuery, limit]);
-    return rows.map((row) => ({ id: text(row.id, 'Food ID', 128), canonicalName: text(row.canonical_name, 'Food name'), normalizedName: text(row.normalized_name, 'Normalized food name'), currentRevisionId: text(row.current_revision_id, 'Current revision ID', 128), archivedAt: row.archived_at === null ? null : utc(row.archived_at, 'Archived timestamp'), basisQuantityScaled: integer(row.basis_quantity_scaled, 'Basis quantity', 1), basisUnit: oneOf(row.basis_unit, units, 'Basis unit'), caloriesKcalScaled: integer(row.calories_kcal_scaled, 'Calories') }));
+    return rows.map(mapFood);
   }
   public async loadFoodWithCurrentRevision(transaction: DatabaseExecutor, foodId: string): Promise<FoodWithCurrentRevision | null> {
     const state = await this.loadFoodState(transaction, foodId);
@@ -43,7 +69,7 @@ export class SqliteManualLoggingRepository implements ManualLoggingRepository, M
     return { state, revision: mapRevision(row) };
   }
   public async listPortions(transaction: DatabaseExecutor, foodId: string): Promise<readonly FoodPortion[]> {
-    const rows = await transaction.all<Readonly<{ id: string; food_id: string; label: string; normalized_label: string; quantity_scaled: number; equivalent_quantity_scaled: number; equivalent_unit: FoodPortion['equivalentUnit'] }>>('SELECT id, food_id, label, normalized_label, quantity_scaled, equivalent_quantity_scaled, equivalent_unit FROM food_portions WHERE food_id = ? ORDER BY normalized_label ASC, id ASC', [foodId]);
+    const rows = await transaction.all<Readonly<{ id: string; food_id: string; label: string; normalized_label: string; quantity_scaled: number; equivalent_quantity_scaled: number; equivalent_unit: FoodPortion['equivalentUnit'] }>>('SELECT p.id, p.food_id, p.label, p.normalized_label, p.quantity_scaled, p.equivalent_quantity_scaled, p.equivalent_unit FROM food_portions p WHERE p.food_id = ? AND (NOT EXISTS (SELECT 1 FROM seed_release_portions any_seed WHERE any_seed.portion_id = p.id) OR EXISTS (SELECT 1 FROM seed_release_portions active_seed JOIN seed_catalog_state state ON state.active_release_id = active_seed.release_id WHERE active_seed.portion_id = p.id)) ORDER BY p.normalized_label ASC, p.id ASC', [foodId]);
     return rows.map((row) => ({ id: text(row.id, 'Portion ID', 128), foodId: text(row.food_id, 'Food ID', 128), label: text(row.label, 'Portion label'), normalizedLabel: text(row.normalized_label, 'Normalized portion label'), quantityScaled: integer(row.quantity_scaled, 'Portion quantity', 1), equivalentQuantityScaled: integer(row.equivalent_quantity_scaled, 'Equivalent quantity', 1), equivalentUnit: oneOf(row.equivalent_unit, ['gram', 'millilitre', 'each'] as const, 'Equivalent unit') }));
   }
   public async loadCurrentRevision(transaction: DatabaseExecutor, foodId: string, revisionId: string): Promise<FoodRevision | null> {

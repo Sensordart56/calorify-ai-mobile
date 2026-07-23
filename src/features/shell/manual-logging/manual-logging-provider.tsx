@@ -2,6 +2,7 @@ import { createContext, type PropsWithChildren, useContext, useMemo, useRef, use
 
 import { ManualLoggingUseCases } from '@/core/application/manual-logging-use-cases';
 import type { FoodListItem } from '@/core/application/manual-logging-ports';
+import type { ResolutionMethod } from '@/core/domain/manual-logging';
 import { ExpoClock } from '@/data/expo-clock';
 import { ExpoIdGenerator } from '@/data/expo-id-generator';
 import { SqliteManualLoggingRepository } from '@/data/sqlite/manual-logging-repository';
@@ -24,14 +25,14 @@ export function useManualLogging(): ManualLoggingUseCases {
   return value;
 }
 
-export type MealDraftItem = Readonly<{ id: string; foodId: string; foodRevisionId: string; canonicalName: string; inputQuantity: string; inputUnit: string; portionId: string | null; requiresReview: boolean; reviewReason: string | null }>;
+export type MealDraftItem = Readonly<{ id: string; foodId: string; foodRevisionId: string; canonicalName: string; inputQuantity: string; inputUnit: string; portionId: string | null; resolutionMethod?: ResolutionMethod; requiresReview: boolean; reviewReason: string | null }>;
 export type MealDraft = Readonly<{ mode: 'create' | 'edit'; mealId: string | null; category: 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'other'; occurredAtUtc: string; localDate: string; timezoneOffsetMinutes: number; items: readonly MealDraftItem[] }>;
 
 type MealDraftContextValue = Readonly<{
   draft: MealDraft | null;
   beginCreate: () => void;
   beginEdit: (draft: MealDraft) => void;
-  addFood: (food: FoodListItem) => void;
+  addFood: (food: FoodListItem, resolutionMethod?: ResolutionMethod) => void;
   updateItem: (id: string, changes: Partial<Pick<MealDraftItem, 'inputQuantity' | 'inputUnit' | 'portionId' | 'foodRevisionId' | 'canonicalName' | 'requiresReview' | 'reviewReason'>>) => void;
   removeItem: (id: string) => void;
   setCategory: (category: MealDraft['category']) => void;
@@ -48,7 +49,7 @@ function createDraft(mode: MealDraft['mode'], mealId: string | null): MealDraft 
 }
 
 export function createMealDraftItemIdFactory(): () => string { let next = 0; return () => `draft-item-${next++}`; }
-export function addFoodToDraft(draft: MealDraft, food: FoodListItem, itemId: string): MealDraft { return { ...draft, items: [...draft.items, { id: itemId, foodId: food.id, foodRevisionId: food.currentRevisionId, canonicalName: food.canonicalName, inputQuantity: '1', inputUnit: food.basisUnit, portionId: null, requiresReview: false, reviewReason: null }] }; }
+export function addFoodToDraft(draft: MealDraft, food: FoodListItem, itemId: string, resolutionMethod: ResolutionMethod = 'manual'): MealDraft { return { ...draft, items: [...draft.items, { id: itemId, foodId: food.id, foodRevisionId: food.currentRevisionId, canonicalName: food.canonicalName, inputQuantity: '1', inputUnit: food.basisUnit, portionId: null, resolutionMethod, requiresReview: false, reviewReason: null }] }; }
 export function updateMealDraftItem(draft: MealDraft, id: string, changes: Partial<Pick<MealDraftItem, 'inputQuantity' | 'inputUnit' | 'portionId' | 'foodRevisionId' | 'canonicalName' | 'requiresReview' | 'reviewReason'>>): MealDraft { return { ...draft, items: draft.items.map((item) => item.id === id ? { ...item, ...changes } : item) }; }
 export function removeMealDraftItem(draft: MealDraft, id: string): MealDraft { return { ...draft, items: draft.items.filter((item) => item.id !== id) }; }
 
@@ -59,7 +60,7 @@ export function MealDraftProvider({ children }: PropsWithChildren) {
     draft,
     beginCreate: () => setDraft(createDraft('create', null)),
     beginEdit: (nextDraft) => setDraft(nextDraft),
-    addFood: (food) => setDraft((current) => addFoodToDraft(current ?? createDraft('create', null), food, nextItemId.current())),
+    addFood: (food, resolutionMethod = 'manual') => setDraft((current) => addFoodToDraft(current ?? createDraft('create', null), food, nextItemId.current(), resolutionMethod)),
     updateItem: (id, changes) => setDraft((current) => current === null ? null : updateMealDraftItem(current, id, changes)),
     removeItem: (id) => setDraft((current) => current === null ? null : removeMealDraftItem(current, id)),
     setCategory: (category) => setDraft((current) => ({ ...(current ?? createDraft('create', null)), category })),

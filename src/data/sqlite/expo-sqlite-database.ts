@@ -42,7 +42,10 @@ class ExpoConnection extends ExpoExecutor implements DatabaseConnection {
     // Expo's withExclusiveTransactionAsync starts BEGIN before its callback. SQLite
     // only accepts foreign_keys changes outside a transaction, so configure the
     // dedicated public useNewConnection connection before BEGIN EXCLUSIVE instead.
-    const transaction = await SQLite.openDatabaseAsync(this.databaseName, { useNewConnection: true });
+    const transaction = await SQLite.openDatabaseAsync(this.databaseName, {
+      useNewConnection: true,
+      finalizeUnusedStatementsBeforeClosing: false,
+    });
     try {
       await transaction.execAsync('PRAGMA foreign_keys = ON');
       const setting = await transaction.getFirstAsync<{ readonly foreign_keys: number }>('PRAGMA foreign_keys');
@@ -70,7 +73,9 @@ class ExpoConnection extends ExpoExecutor implements DatabaseConnection {
 }
 
 export async function openExpoDatabase(name: string): Promise<DatabaseConnection> {
-  return new ExpoConnection(name, await SQLite.openDatabaseAsync(name));
+  return new ExpoConnection(name, await SQLite.openDatabaseAsync(name, {
+    finalizeUnusedStatementsBeforeClosing: false,
+  }));
 }
 
 export const DISPOSABLE_INTEGRATION_DATABASE = 'calorify-phase2-integration-test.db';
